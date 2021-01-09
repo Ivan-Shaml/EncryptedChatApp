@@ -8,17 +8,31 @@ var connection =
         .build();
 
 var uname_string = $("#uname").val();
+var notification_sound = new Audio('/sounds/clearly-602.mp3');
 
 connection.on("NewMessage",
     function (message) {
         var sendDate = message.date.slice(message.date.indexOf("T") + 1, message.date.indexOf("."));
-        var chatInfo = `<div>[${message.user}] (${sendDate}) ${escapeHtml(message.text)} </div>`;
+        var chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
         //console.log(sendDate);
         if (uname_string !== message.user) {
-            var audio = new Audio('/sounds/clearly-602.mp3');
-            audio.play();
+            notification_sound.play();
         }
+        if (message.user == "SYSTEM") {
+            chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+        }
+
         $("#messagesList").append(chatInfo);
+    });
+
+connection.on("UserList",
+    function (item) {
+        $("#UserList").empty();
+        $("#UserList").append("<strong class='list-group-item list-group-item-info'>Connected Users</strong>")
+        for (var i = 0; i < item.length; i++) {
+            $("#UserList").append("<li class='list-group-item'>" + item[i] + "</li>");
+        }
+        //console.log(item);
     });
 
 var input = document.getElementById("messageInput");

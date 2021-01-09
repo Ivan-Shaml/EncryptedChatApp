@@ -1,52 +1,55 @@
 ﻿@model List<Message>
 
 @{
-    this.ViewBag.Title = "Chat";
+    ViewData["Title"] = "Chat";
 }
-
-<h1>@this.ViewBag.Title</h1>
 
 <input type="hidden" id="uname" value="@User.Identity.Name" />
 
+<div class="container">
+    <ul id="UserList" class="list-group">
+    </ul>
+</div>
+
 @if (Model.Any())
 {
-<div class="container">
-    <div id="messagesList" style="font-size: 28px;">
+    <div class="container">
+        <div id="messagesList" style="font-size: 18px;">
 
-        <p> <strong> [ @Model[0].Date.Day/ @Model[0].Date.Month/ @Model[0].Date.Year ]</strong> </p>
+            <h5 class="text-center text-secondary"> [ @Model[0].Date.Day/ @Model[0].Date.Month/ @Model[0].Date.Year ]</h5>
 
-        @for (int i = 0; i < Model.Count; i++)
-        {
-            if (i - 1 >= 0 && Model[i - 1].Date.Date < Model[i].Date.Date)
+            @for (int i = 0; i < Model.Count; i++)
             {
-                <p> <strong> [ @Model[i].Date.Day/ @Model[i].Date.Month/ @Model[i].Date.Year ]</strong> </p>
-            }
+                if (i - 1 >= 0 && Model[i - 1].Date.Date < Model[i].Date.Date)
+                {
+                    <p> <strong> [ @Model[i].Date.Day/ @Model[i].Date.Month/ @Model[i].Date.Year ]</strong> </p>
+                }
 
-            <div>[@Model[i].User] (@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second) @Model[i].Text</div>
-        }
-    </div>
-    <hr style="height: 5px;" class="bg-dark" />
+                <div><i>@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong>[@Model[i].User]</strong>: @Model[i].Text</div>
+            }
+        </div>
+        <hr style="height: 5px;" class="bg-dark" />
         <div class="fixed-bottom position-sticky bg-white">
             <div id="message-holder" class="mt-3 d-flex justify-content-start">
                 <input class="w-75 ml-4 pl-3" type="text" id="messageInput" placeholder="Message..." />
                 <button id="sendButton" class="ml-4 btn btn-primary btn-lg">Send</button>
             </div>
         </div>
-</div>
+    </div>
 }
 else
 {
-<div class="container">
-    <div id="messagesList" style="font-size: 28px;">
-    </div>
-    <hr style="height: 5px;" class="bg-dark" />
-    <div class="fixed-bottom position-sticky bg-white">
-        <div id="message-holder" class="mt-3 d-flex justify-content-start">
-            <input class="w-75 ml-4 pl-3" type="text" id="messageInput" placeholder="Message..." />
-            <button id="sendButton" class="ml-4 btn btn-primary btn-lg">Send</button>
+    <div class="container">
+        <div id="messagesList" style="font-size: 18px;">
+        </div>
+        <hr style="height: 5px;" class="bg-dark" />
+        <div class="fixed-bottom position-sticky bg-white">
+            <div id="message-holder" class="mt-3 d-flex justify-content-start">
+                <input class="w-75 ml-4 pl-3" type="text" id="messageInput" placeholder="Message..." />
+                <button id="sendButton" class="ml-4 btn btn-primary btn-lg">Send</button>
+            </div>
         </div>
     </div>
-</div>
 }
 
 @section Scripts {
