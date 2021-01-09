@@ -6,88 +6,49 @@
 
 <h1>@this.ViewBag.Title</h1>
 
+<input type="hidden" id="uname" value="@User.Identity.Name" />
+
 @if (Model.Any())
 {
-    <div class="container">
-        <div id="message-holder" class="mt-3 d-flex justify-content-start">
-            <h4>Message</h4>
-            <input class="w-75 ml-4 pl-3" type="text" id="messageInput" placeholder="Message..." />
-            <button id="sendButton" class="ml-4 btn btn-dark btn-lg">Send</button>
-        </div>
-        <hr style="height: 5px;" class="bg-dark" />
-        <div id="messagesList" style="font-size: 28px;">
+<div class="container">
+    <div id="messagesList" style="font-size: 28px;">
 
-            <p> <strong> [ @Model[0].Date.Day/ @Model[0].Date.Month/ @Model[0].Date.Year ]</strong> </p>
+        <p> <strong> [ @Model[0].Date.Day/ @Model[0].Date.Month/ @Model[0].Date.Year ]</strong> </p>
 
-            @for (int i = 0; i < Model.Count; i++)
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            if (i - 1 >= 0 && Model[i - 1].Date.Date < Model[i].Date.Date)
             {
-                if (i - 1 >= 0 && Model[i - 1].Date.Date < Model[i].Date.Date)
-                {
-                    <p> <strong> [ @Model[i].Date.Day/ @Model[i].Date.Month/ @Model[i].Date.Year ]</strong> </p>
-                }
-
-                <div>[@Model[i].User] (@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second) @Model[i].Text</div>
+                <p> <strong> [ @Model[i].Date.Day/ @Model[i].Date.Month/ @Model[i].Date.Year ]</strong> </p>
             }
-        </div>
+
+            <div>[@Model[i].User] (@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second) @Model[i].Text</div>
+        }
     </div>
+    <hr style="height: 5px;" class="bg-dark" />
+        <div class="fixed-bottom position-sticky bg-white">
+            <div id="message-holder" class="mt-3 d-flex justify-content-start">
+                <input class="w-75 ml-4 pl-3" type="text" id="messageInput" placeholder="Message..." />
+                <button id="sendButton" class="ml-4 btn btn-primary btn-lg">Send</button>
+            </div>
+        </div>
+</div>
 }
 else
 {
-    <div class="container">
+<div class="container">
+    <div id="messagesList" style="font-size: 28px;">
+    </div>
+    <hr style="height: 5px;" class="bg-dark" />
+    <div class="fixed-bottom position-sticky bg-white">
         <div id="message-holder" class="mt-3 d-flex justify-content-start">
-            <h4>Message</h4>
             <input class="w-75 ml-4 pl-3" type="text" id="messageInput" placeholder="Message..." />
-            <button id="sendButton" class="ml-4 btn btn-dark btn-lg">Send</button>
-        </div>
-        <hr style="height: 5px;" class="bg-dark" />
-        <div id="messagesList" style="font-size: 28px;">
+            <button id="sendButton" class="ml-4 btn btn-primary btn-lg">Send</button>
         </div>
     </div>
+</div>
 }
-            @section Scripts {
-                <script>
-                    var connection =
-                        new signalR.HubConnectionBuilder()
-                            .withUrl("/chat")
-                            .build();
 
-                    connection.on("NewMessage",
-                        function (message) {
-                            var sendDate = message.date.slice(message.date.indexOf("T") + 1, message.date.indexOf("."));
-                            var chatInfo = `<div>[${message.user}] (${sendDate}) ${escapeHtml(message.text)} </div>`;
-                            //console.log(sendDate);
-                            $("#messagesList").append(chatInfo);
-                        });
-
-                    var input = document.getElementById("messageInput");
-                    input.addEventListener("keyup", function (event) {
-                        if (event.keyCode === 13) {
-                            event.preventDefault();
-                            document.getElementById("sendButton").click();
-                        }
-                    });
-
-                    $("#sendButton").click(function () {
-                        var message = $("#messageInput").val();
-                        if (message == '')
-                            return false;
-                        else {
-                            connection.invoke("Send", message);
-                            input.value = "";
-                        }
-                    });
-
-                    connection.start().catch(function (err) {
-                        return console.error(err.toString());
-                    });
-
-                    function escapeHtml(unsafe) {
-                        return unsafe
-                            .replace(/&/g, "&amp;")
-                            .replace(/</g, "&lt;")
-                            .replace(/>/g, "&gt;")
-                            .replace(/"/g, "&quot;")
-                            .replace(/'/g, "&#039;");
-                    }
-                </script>
-            }
+@section Scripts {
+    <script src="/js/chat.js"></script>
+}
