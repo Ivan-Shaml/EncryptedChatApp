@@ -1,6 +1,7 @@
 ﻿using ChatAppProject.Data;
 using ChatAppProject.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -14,9 +15,11 @@ namespace ChatAppProject.Controllers
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
-        public HomeController(ApplicationDbContext dbContext)
+        private readonly UserManager<IdentityUser> _userManager;
+        public HomeController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager)
         {
             _dbContext = dbContext;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -27,10 +30,16 @@ namespace ChatAppProject.Controllers
 
         [HttpGet]
         [Authorize]
-        public IActionResult Chat()
+        public async Task<IActionResult> Chat()
         {
-            List<Message> messages = _dbContext.Messages.Where(m => m.Date > DateTime.Now.AddDays(-3)).ToList();
-            return View(messages);
+            IdentityUser u = await _userManager.FindByNameAsync(this.HttpContext.User.Identity.Name);
+            if (u != null)
+            {
+                string UserId = u.Id;
+                List<Message> messages = _dbContext.Messages.Where(m => m.Date > DateTime.Now.AddDays(-3) && m.RecepientUserId == UserId).ToList();
+                return View(messages);
+            }
+            else return RedirectToAction("Index", "Home");
         }
 
 

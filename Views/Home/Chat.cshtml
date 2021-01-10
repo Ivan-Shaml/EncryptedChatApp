@@ -25,7 +25,7 @@
                     <p> <strong> [ @Model[i].Date.Day/ @Model[i].Date.Month/ @Model[i].Date.Year ]</strong> </p>
                 }
 
-                <div><i>@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong>[@Model[i].User]</strong>: @Model[i].Text</div>
+                <div><i>@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong>[@Model[i].User]</strong>: <span id="encryped_message">@Model[i].Text<span></div>
             }
         </div>
         <hr style="height: 5px;" class="bg-dark" />
@@ -53,5 +53,6 @@ else
 }
 
 @section Scripts {
+    <script src="/js/crypto/jsencrypt.min.js"></script>
     <script src="/js/chat.js"></script>
 }

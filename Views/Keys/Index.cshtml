@@ -1,0 +1,36 @@
+﻿@model PubKey
+
+
+@{
+    ViewData["Title"] = "Public Keys";
+}
+
+@if (Model != null)
+{
+    <table class="table table-dark">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Key Id</th>
+                <th scope="col">Added on</th>
+                <th scope="col">Public Key</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th scope="row">1</th>
+                <td>@Model.Id</td>
+                <td>@Model.DateAdded</td>
+                <td><textarea readonly cols="76" rows="7">@Model.PublicKey</textarea></td>
+            </tr>
+        </tbody>
+    </table>
+    <br />
+    <a class="btn btn-danger" asp-controller="Keys" asp-action="Delete" asp-route-Id="@Model.Id">Delete Public Key</a>
+}
+else
+{
+    <h4 class="text-danger text-center">There are No Public Keys associated with your account, please add one to start using the chat!</h4>
+
+    <a class="btn btn-success" asp-controller="Keys" asp-action="Create">Add New Key</a>
+}
