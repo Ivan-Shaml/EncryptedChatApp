@@ -54,4 +54,4 @@ When you open `Chat`, the client side JS will prompt you to input your PRIVATE K
 * Well, in our app as well as many other web apps, the whole crypto is on JavaScript(JQuery), which is downloaded remotely from the server and ran inside the client's browser.
    
    What if somebody compromised the server and replaced the JS with something that would still work, but send your private key else where and for some 3rd party to obtain it.
-* Or using (XSS)[https://owasp.org/www-community/attacks/xss/] to hijack your key. We have implemented `Reflected XSS Attack` protection on the messages part, but it is only client side.
+* Or using [XSS](https://owasp.org/www-community/attacks/xss/) to hijack your key. We have implemented `Reflected XSS Attack` protection on the messages part, but it is only client side.
