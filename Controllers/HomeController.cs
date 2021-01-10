@@ -35,6 +35,10 @@ namespace ChatAppProject.Controllers
             IdentityUser u = await _userManager.FindByNameAsync(this.HttpContext.User.Identity.Name);
             if (u != null)
             {
+                PubKey pk = _dbContext.PublicKeys.FirstOrDefault(k => k.UserId == u.Id);
+                if (pk == null)
+                    return RedirectToAction("Index", "Keys");
+
                 string UserId = u.Id;
                 List<Message> messages = _dbContext.Messages.Where(m => m.Date > DateTime.Now.AddDays(-3) && m.RecepientUserId == UserId).ToList();
                 return View(messages);
