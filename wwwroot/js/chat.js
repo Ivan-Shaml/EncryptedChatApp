@@ -42,6 +42,7 @@ connection.on("NewMessage",
         var chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
         if (message.user == "SYSTEM") {
             chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+            $("#messagesList").append(chatInfo);
         }
 
         var decrypt = new JSEncrypt();
@@ -71,16 +72,16 @@ connection.on("UserList",
         //console.log(item);
     });
 
-connection.on("UserListId",
-    function (lst) {
-        //$("#UserList").empty();
-        //$("#UserList").append(`<strong class='list-group-item list-group-item-info'>Online Users [${item.length}]</strong>`)
-        //for (var i = 0; i < item.length; i++) {
-        //    $("#UserList").append("<li class='list-group-item'>" + item[i] + "</li>");
-        //}
-        idList = lst;
-        console.log(idList);
-    });
+//connection.on("UserListId",
+//    function (lst) {
+//        //$("#UserList").empty();
+//        //$("#UserList").append(`<strong class='list-group-item list-group-item-info'>Online Users [${item.length}]</strong>`)
+//        //for (var i = 0; i < item.length; i++) {
+//        //    $("#UserList").append("<li class='list-group-item'>" + item[i] + "</li>");
+//        //}
+//        idList = lst;
+//        console.log(idList);
+//    });
 
 connection.on("UserListPubKeys",
     function (list) {
@@ -107,22 +108,16 @@ $("#sendButton").click(function () {
     if (unec_message == '')
         return false;
     else {
-        for (var i = 0; i < idList.length; i++) {
-            for (var k = 0; k < pubList.length; k++) {
-                if (idList[i] == pubList[k].userId) {
-                    var encrypt = new JSEncrypt();
-                    encrypt.setPublicKey(pubList[k].publicKey);
-                    var encr_message = encrypt.encrypt(unec_message);
-                    console.log(encr_message);
-                    
-                }
+            for (var i = 0; i < pubList.length; i++) {
+                var encrypt = new JSEncrypt();
+                encrypt.setPublicKey(pubList[i].publicKey);
+                var encr_message = encrypt.encrypt(unec_message);
+                //console.log(encr_message);
+                connection.invoke("Send", encr_message, pubList[i].userId);
             }
-
-            connection.invoke("Send", encr_message, idList[i]);
             window.scrollTo(0, document.body.scrollHeight);
             input.value = "";
         }
-    }
 });
 
 connection.start().catch(function (err) {

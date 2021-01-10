@@ -17,7 +17,7 @@ namespace ChatAppProject.Hubs
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<IdentityUser> _userManager;
         private static List<string> CurrentUsers = new List<string>();
-        private static List<string> CurrentUserIds = new List<string>();
+        //private static List<string> CurrentUserIds = new List<string>();
         public ChatHub(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager)
         {
             _dbContext = dbContext;
@@ -34,18 +34,15 @@ namespace ChatAppProject.Hubs
                 {
                     messageForDB.RecepientUserId = r.Id;
 
-                    //await this.Clients.All.SendAsync(
-                    //                       "NewMessage", messageForDB);
-
-
-                    foreach (string id in CurrentUserIds)
-                    {
-                        if (id == recipientId)
-                        {
-                            await this.Clients.User(recipientId).SendAsync(
-                                                                 "NewMessage", messageForDB);
-                        }
-                    }
+                    //foreach (string id in CurrentUserIds)
+                    //{
+                    //    if (id == recipientId)
+                    //    {
+                    //    }
+                    //}
+                    
+                    await this.Clients.User(recipientId).SendAsync(
+                                                            "NewMessage", messageForDB);
 
                     await _dbContext.AddAsync(messageForDB);
                     await _dbContext.SaveChangesAsync();
@@ -60,10 +57,10 @@ namespace ChatAppProject.Hubs
                                             "NewMessage", message);
             
             CurrentUsers.Add(this.Context.User.Identity.Name);
-            List<string> AllUserIds = _userManager.Users.Where(u => u.Id != null).Select(u => u.Id).ToList();
+            //List<string> AllUserIds = _userManager.Users.Where(u => u.Id != null).Select(u => u.Id).ToList();
 
-            IdentityUser ConnectionUser = await _userManager.FindByNameAsync(this.Context.User.Identity.Name);
-            CurrentUserIds.Add(ConnectionUser.Id);
+            //IdentityUser ConnectionUser = await _userManager.FindByNameAsync(this.Context.User.Identity.Name);
+            //CurrentUserIds.Add(ConnectionUser.Id);
             var AllUsersPublicKeys = _dbContext.PublicKeys.Select(item => new
                                                                     {
                                                                         userId = item.UserId,
@@ -71,8 +68,8 @@ namespace ChatAppProject.Hubs
                                                                     }).ToList();
             await this.Clients.All.SendAsync(
                                             "UserList", CurrentUsers);
-            await this.Clients.All.SendAsync(
-                                            "UserListId", AllUserIds);
+            //await this.Clients.All.SendAsync(
+            //                                "UserListId", AllUserIds);
             await this.Clients.All.SendAsync(
                                             "UserListPubKeys", AllUsersPublicKeys);
             await base.OnConnectedAsync();
@@ -85,16 +82,16 @@ namespace ChatAppProject.Hubs
                                             "NewMessage", message);
 
             string connection = CurrentUsers.FirstOrDefault(u => u == this.Context.User.Identity.Name);
-            IdentityUser ConnectionUser = await _userManager.FindByNameAsync(this.Context.User.Identity.Name);
-            string UID = CurrentUserIds.FirstOrDefault(u => u == ConnectionUser.Id);
-            if (connection != null && UID != null)
+            //IdentityUser ConnectionUser = await _userManager.FindByNameAsync(this.Context.User.Identity.Name);
+            //string UID = CurrentUserIds.FirstOrDefault(u => u == ConnectionUser.Id);
+            if (connection != null )//&& UID != null)
                 CurrentUsers.Remove(connection);
-                CurrentUserIds.Remove(UID);
+                //CurrentUserIds.Remove(UID);
 
             await this.Clients.All.SendAsync(
                                 "UserList", CurrentUsers);
-            await this.Clients.All.SendAsync(
-                                           "UserListId", CurrentUserIds);
+            //await this.Clients.All.SendAsync(
+            //                               "UserListId", CurrentUserIds);
 
             await base.OnDisconnectedAsync(exception);
         }
