@@ -4,7 +4,8 @@
     ViewData["Title"] = "Chat";
 }
 
-<input type="hidden" id="uname" value="@User.Identity.Name" />
+<input type="hidden" id="thisUNAME" value="@ViewBag.UserName" />
+<input type="hidden" id="thisUID" value="@ViewBag.UserId" />
 
 <div class="container">
     <ul id="UserList" class="list-group">

@@ -41,6 +41,8 @@ namespace ChatAppProject.Controllers
 
                 string UserId = u.Id;
                 List<Message> messages = _dbContext.Messages.Where(m => m.Date > DateTime.Now.AddDays(-3) && m.RecepientUserId == UserId).ToList();
+                ViewBag.UserId = UserId;
+                ViewBag.UserName = u.UserName;
                 return View(messages);
             }
             else return RedirectToAction("Index", "Home");

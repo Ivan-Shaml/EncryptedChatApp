@@ -56,6 +56,22 @@ namespace ChatAppProject.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> DeleteActivity()
+        {
+            string UserName = HttpContext.User.Identity.Name;
+            IdentityUser User = await _userManager.FindByNameAsync(UserName);
+            if (User != null)
+            {
+                List<Message> MessagesToDelete = _dbContext.Messages.Where(u => u.RecepientUserId == User.Id || u.SenderUserId.Id == User.Id).ToList();
+                _dbContext.RemoveRange(MessagesToDelete);
+                await _dbContext.SaveChangesAsync();
+                return RedirectToAction("Index", "Keys");
+            }
+
+            return NotFound();
+        }
+
+        [HttpGet]
         public IActionResult Create()
         {
             return View();

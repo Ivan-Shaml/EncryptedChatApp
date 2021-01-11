@@ -10,7 +10,6 @@
     <table class="table table-dark">
         <thead>
             <tr>
-                <th scope="col">#</th>
                 <th scope="col">Key Id</th>
                 <th scope="col">Added on</th>
                 <th scope="col">Public Key</th>
@@ -18,15 +17,52 @@
         </thead>
         <tbody>
             <tr>
-                <th scope="row">1</th>
                 <td>@Model.Id</td>
                 <td>@Model.DateAdded</td>
-                <td><textarea readonly cols="76" rows="7">@Model.PublicKey</textarea></td>
+                <td><textarea readonly cols="86" rows="7">@Model.PublicKey</textarea></td>
             </tr>
         </tbody>
     </table>
     <br />
-    <a class="btn btn-danger" asp-controller="Keys" asp-action="Delete" asp-route-Id="@Model.Id">Delete Public Key</a>
+
+    <span id="confirmDeleteSpan_key" style="display:none">
+        <span><br />Are you sure you want to delete this Public Key?</span>
+        <a sp-controller="Keys" asp-action="Delete" asp-route-Id="@Model.Id" class="btn btn-danger">Yes</a>
+        <a href="#" class="btn btn-success" onclick="confirmDelete('key', false)">No</a><br />
+    </span>
+
+    <span id="deleteSpan_key">
+        <a href="#" class="btn btn-danger" onclick="confirmDelete('key', true)">Delete Public Key</a>
+    </span>
+    <br />
+
+    <span id="confirmDeleteSpan_activity" style="display:none">
+        <span><br />Are you sure you want to delete all messages associated with you?</span>
+        <a sp-controller="Keys" asp-action="DeleteActivity" class="btn btn-danger">Yes</a>
+        <a href="#" class="btn btn-success" onclick="confirmDelete('activity', false)">No</a><br />
+    </span>
+
+    <br />
+    <span id="deleteSpan_activity">
+        <a href="#" class="btn btn-danger" onclick="confirmDelete('activity', true)">Delete All My Activity</a>
+    </span>
+
+
+    <script>
+        function confirmDelete(uniqueId, isDeleteClicked) {
+            var deleteSpan = 'deleteSpan_' + uniqueId;
+            var confirmDeleteSpan = 'confirmDeleteSpan_' + uniqueId;
+
+            if (isDeleteClicked) {
+                $('#' + deleteSpan).hide();
+                $('#' + confirmDeleteSpan).show();
+            } else {
+                $('#' + deleteSpan).show();
+                $('#' + confirmDeleteSpan).hide();
+            }
+        }
+    </script>
+
 }
 else
 {
