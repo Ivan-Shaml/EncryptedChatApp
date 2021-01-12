@@ -6,7 +6,7 @@ This is an end-to-end encrypted real time chat web application.
  
    * using **WSS** (Web Secure Socket) and **HTTPS** protocols for all data transport
    * **client side encryption/decryption via [Travis Tidwell
-'s jsencryp library](https://github.com/travist/jsencrypt). Using RSA Public/Private Key Pair.**
+'s JSEncrypt library](https://github.com/travist/jsencrypt). Using RSA Public/Private Key Pair.**
 
 ## What is End-to-end Encryption ?
 End-to-end encryption (E2EE) is a system of communication where only the communicating users can read the messages. In principle, it prevents potential eavesdroppers – including telecom providers, Internet providers, Law enforcement, and even the provider of the communication service – from being able to access the cryptographic keys needed to decrypt the conversation.
@@ -21,7 +21,7 @@ In a public-key cryptosystem, the encryption key is public and distinct from the
 The security of RSA relies on the practical difficulty of factoring the product of two large prime numbers, the "factoring problem". Breaking RSA encryption is known as the RSA problem. Whether it is as difficult as the factoring problem is an open question. **There are no published methods to defeat the system if a large enough key is used.**
 
 ## Generate Key Pair
-
+#### Option 1:
 In Git Bash, change to your desired directory and type:
 
 To generate private key:
@@ -33,6 +33,10 @@ To generate public key:
 ```bash
 openssl rsa -pubout -in rsa_2048_priv.pem -out rsa_2048_pub.pem
 ```
+#### Option 2:
+Click on `Encryption Keys` and then `Add New Key`. You can click on `Generate Key Pair`, to call the JSEncrypt script which will generate a pair for you. Make sure you copy and save your private key, and click on `Add Public Key` .
+
+
 **Disclaimer:** With the effectively more powerfull machines coming in the next years ([Moore's law](https://en.wikipedia.org/wiki/Moore%27s_law)), RSA 2048 can become vulnerable, to mitigate that use 4096 keys(realy slows down the decryption proccess if there are many messages sent), or switch to elliptical curve cryptography([EdDSA](https://en.wikipedia.org/wiki/EdDSA) algorithm for example).
 
 ### Operation

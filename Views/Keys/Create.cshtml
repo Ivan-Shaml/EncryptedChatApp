@@ -1,29 +1,42 @@
 ﻿@model ChatAppProject.ViewModels.AddKeyVM
 
 @{
-    ViewData["Title"] = "Add Key";
+    ViewData["Title"] = "Add Public Key";
 }
 
-<h2>Add Pub Key</h2>
-
+<h2>Add Public Key</h2>
 <hr />
+
+<p>You can generate your own key pair by clicking on the button bellow(this will take some time), or paste a public key that you have generated yourself using the OpenSSL utility.</p>
+<button id="GenerateButton" class="btn btn-dark m-2">Generate Key Pair</button>
+
 <div class="row">
-    <div class="container">
+    <div class="col-lg-6">
+        <label for="privkey" class="control-label m-1">Private Key</label><button id="cp_btn" class="btn btn-info float-right m-1">Copy</button>
+        <textarea id="privkey" rows="15" class="form-control" readonly></textarea>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="container m-3">
         <form asp-action="Create" asp-controller="Keys">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="PublicKey" class="control-label"></label>
-                <textarea asp-for="PublicKey" class="form-control" cols="13" rows="10"></textarea>
+                <label class="control-label m-1">Public Key</label>
+                <textarea asp-for="PublicKey" class="form-control w-75" rows="9"></textarea>
                 <span asp-validation-for="PublicKey" class="text-danger"></span>
                 @Html.ValidationMessage("KeyErr")
             </div>
             <div class="form-group">
-                <input type="submit" value="Add Key" class="btn btn-success" />
+                <input type="submit" value="Add Public Key" class="btn btn-success" />
             </div>
         </form>
     </div>
 </div>
 
 @section Scripts {
+    <script src="/js/crypto/jsencrypt.js"></script>
+    <script src="/js/crypto/genKeys.js"></script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
