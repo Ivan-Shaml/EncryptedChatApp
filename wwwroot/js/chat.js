@@ -31,7 +31,11 @@ connection.on("NewMessage",
         decrypt.setPrivateKey(privateKey);
         message.text = decrypt.decrypt(message.text);
 
-        chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+        if (message.user == uname_string) {
+            chatInfo = `<div><i>${sendDate}</i> <strong class="text-primary">[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+        } else {
+            chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+        }
 
         if (uname_string !== message.user) {
             notification_sound.play();
@@ -136,6 +140,13 @@ function check_private_key() {
             msg = decrypt.decrypt(msg);
             msg = escapeHtml(msg);
             $(this).html(msg);
+        }
+
+    });
+
+    $("strong[id]").each(function () {
+        if (this.id === "m_uid" && this.innerText === `[${uname_string}]`) {
+            $(this).addClass("text-primary");
         }
     });
 
