@@ -76,7 +76,6 @@ connection.on("UserList",
 connection.on("UserListPubKeys",
     function (list) {
         pubList = list;
-        console.log(pubList);
         if (triger) {
             privateKey = prompt_private_key();
             check_private_key();
@@ -89,9 +88,6 @@ input.addEventListener("keyup", function (event) {
         event.preventDefault();
         document.getElementById("sendButton").click();
     }
-    //if (input.value.startsWith("@")) {
-    //    console.log("Whisper");
-    //}
 });
 
 var recipient_pubKey;
@@ -135,7 +131,6 @@ $("#sendButton").click(function () {
                 var encrypt = new JSEncrypt();
                 encrypt.setPublicKey(pubList[i].publicKey);
                 var encr_message = encrypt.encrypt(unec_message);
-                console.log("NORMAL Message Send");
                 connection.invoke("Send", encr_message, pubList[i].userId);
             }
             $("#messageInput").removeClass("invalid_recipient");
