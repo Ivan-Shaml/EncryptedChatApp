@@ -94,7 +94,7 @@ var recipient_pubKey;
 var recipient_userId;
 $("#sendButton").click(function () {
     var unec_message = $("#messageInput").val();
-    unec_message = escapeHtml(unec_message);
+    //unec_message = escapeHtml(unec_message); //Enable on send too for better Reflected XXS prevention
     if (unec_message == '')
         return false;
     else if (unec_message.startsWith("@")) {
