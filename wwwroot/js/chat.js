@@ -123,6 +123,8 @@ $("#sendButton").click(function () {
                 $("#messageInput").removeClass("invalid_recipient");
             }else{
                 $("#messageInput").addClass("invalid_recipient");
+                recipient_userId = null;
+                recipient_pubKey = null;
             }
         }
 
