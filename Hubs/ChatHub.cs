@@ -52,6 +52,7 @@ namespace ChatAppProject.Hubs
             var AllUsersPublicKeys = _dbContext.PublicKeys.Select(item => new
                                                                     {
                                                                         userId = item.UserId,
+                                                                        userName = item.ParentUser.UserName,
                                                                         publicKey = item.PublicKey
                                                                     }).ToList();
             await this.Clients.All.SendAsync(

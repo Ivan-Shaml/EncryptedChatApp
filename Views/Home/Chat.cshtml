@@ -24,10 +24,17 @@
                 if (i - 1 >= 0 && Model[i - 1].Date.Date < Model[i].Date.Date)
                 {
                     <h5 class="text-center text-secondary"> [ @Model[i].Date.Day/ @Model[i].Date.Month/ @Model[i].Date.Year ]</h5>
-                    }
+                }
 
+                @if (Model[i].Text.StartsWith('%'))
+                {
+                    <div class="whisper"><i>(W)@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong id="m_uid">[@Model[i].User]</strong>: <span id="encryped_message">@Model[i].Text.TrimStart('%')</span></div>
+                }
+                else
+                {
                     <div><i>@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong id="m_uid">[@Model[i].User]</strong>: <span id="encryped_message">@Model[i].Text</span></div>
                 }
+            }
         </div>
         <hr style="height: 5px;" class="bg-dark" />
         <div class="fixed-bottom position-sticky bg-white">

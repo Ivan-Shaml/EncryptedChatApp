@@ -69,3 +69,12 @@ body {
   white-space: nowrap;
   line-height: 60px; /* Vertically center the text there */
 }
+
+.whisper {
+    color: purple;
+}
+
+.invalid_recipient {
+    background-color: red;
+    color: white;
+}

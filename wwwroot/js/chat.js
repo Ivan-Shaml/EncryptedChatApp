@@ -5,8 +5,12 @@
 
 var uname_string = $("#thisUNAME").val();
 var notification_sound = new Audio('/sounds/clearly-602.mp3');
+var whisper_sound = new Audio('/sounds/new_whisper.mp3');
+var system_join_sound = new Audio('/sounds/chat_join.mp3');
+var system_leave_sound = new Audio('/sounds/chat_leave.mp3');
 var pubList;
 var triger = true;
+var whisper = false;
 var privateKey;
 
 function escapeHtml(unsafe) {
@@ -25,23 +29,39 @@ connection.on("NewMessage",
         if (message.user == "SYSTEM") {
             chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
             $("#messagesList").append(chatInfo);
+            if(message.text.includes("joined")){
+                system_join_sound.play();
+            }else{
+                system_leave_sound.play();
+            }
         }
 
-        var decrypt = new JSEncrypt();
-        decrypt.setPrivateKey(privateKey);
-        message.text = decrypt.decrypt(message.text);
+        if (message.text.startsWith("%")){
+            message.text = message.text.substring(1);
+            var decrypt = new JSEncrypt();
+            decrypt.setPrivateKey(privateKey);
+            message.text = decrypt.decrypt(message.text);
+            if(message.user == uname_string){
+            chatInfo = `<div class="whisper"><i>(W)${sendDate}</i> <strong class="text-primary">[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+            }else {
+                chatInfo = `<div class="whisper"><i>(W)${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+                whisper_sound.play();
+            }
+            $("#messagesList").append(chatInfo);
+        }else{
+            var decrypt = new JSEncrypt();
+            decrypt.setPrivateKey(privateKey);
+            message.text = decrypt.decrypt(message.text);
 
-        if (message.user == uname_string) {
-            chatInfo = `<div><i>${sendDate}</i> <strong class="text-primary">[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
-        } else {
-            chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+            if (message.user == uname_string) {
+                chatInfo = `<div><i>${sendDate}</i> <strong class="text-primary">[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+            } else {
+                chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+                notification_sound.play();
+            }
+
+            $("#messagesList").append(chatInfo);
         }
-
-        if (uname_string !== message.user) {
-            notification_sound.play();
-        }
-
-        $("#messagesList").append(chatInfo);
     });
 
 connection.on("UserList",
@@ -56,7 +76,7 @@ connection.on("UserList",
 connection.on("UserListPubKeys",
     function (list) {
         pubList = list;
-        //console.log(pubList);
+        console.log(pubList);
         if (triger) {
             privateKey = prompt_private_key();
             check_private_key();
@@ -69,20 +89,56 @@ input.addEventListener("keyup", function (event) {
         event.preventDefault();
         document.getElementById("sendButton").click();
     }
+    //if (input.value.startsWith("@")) {
+    //    console.log("Whisper");
+    //}
 });
 
+var recipient_pubKey;
+var recipient_userId;
 $("#sendButton").click(function () {
     var unec_message = $("#messageInput").val();
     unec_message = escapeHtml(unec_message);
     if (unec_message == '')
         return false;
+    else if (unec_message.startsWith("@")) {
+        var w_recipient_name = unec_message.substring(1,unec_message.indexOf(' '));
+        unec_message = unec_message.substring(unec_message.indexOf(' ')+1);
+        for (var i = 0; i < pubList.length; i++) {
+            if (pubList[i].userName == w_recipient_name){
+                recipient_pubKey = pubList[i].publicKey;
+                recipient_userId = pubList[i].userId;
+                break;
+            }}
+            if(recipient_pubKey != null && unec_message.trim().length && recipient_pubKey != thisUserPubKey){
+                var encrypt = new JSEncrypt();
+                encrypt.setPublicKey(recipient_pubKey);
+                var encr_message = encrypt.encrypt(unec_message);
+                encr_message = "%" + encr_message;
+                connection.invoke("Send", encr_message, recipient_userId);
+                encrypt.setPublicKey(thisUserPubKey);
+                var encr_message = encrypt.encrypt(unec_message);
+                encr_message = "%" + encr_message;
+                connection.invoke("Send", encr_message, UserId);
+                window.scrollTo(0, document.body.scrollHeight);
+                $("#messageInput").val('');
+                recipient_userId = null;
+                recipient_pubKey = null;
+                $("#messageInput").removeClass("invalid_recipient");
+            }else{
+                $("#messageInput").addClass("invalid_recipient");
+            }
+        }
+
     else {
             for (var i = 0; i < pubList.length; i++) {
                 var encrypt = new JSEncrypt();
                 encrypt.setPublicKey(pubList[i].publicKey);
                 var encr_message = encrypt.encrypt(unec_message);
+                console.log("NORMAL Message Send");
                 connection.invoke("Send", encr_message, pubList[i].userId);
             }
+            $("#messageInput").removeClass("invalid_recipient");
             window.scrollTo(0, document.body.scrollHeight);
             input.value = "";
         }
