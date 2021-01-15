@@ -2,6 +2,7 @@ using ChatAppProject.Data;
 using ChatAppProject.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI;
@@ -48,6 +49,11 @@ namespace ChatAppProject
                 configure.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
             });
             services.AddRazorPages();
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                options.CheckConsentNeeded = context => true;
+                options.MinimumSameSitePolicy = SameSiteMode.Strict;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,6 +74,7 @@ namespace ChatAppProject
             app.UseStaticFiles();
 
             app.UseRouting();
+            app.UseCookiePolicy();
 
             app.UseAuthentication();
             app.UseAuthorization();
