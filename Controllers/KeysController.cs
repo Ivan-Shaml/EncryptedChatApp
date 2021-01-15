@@ -78,6 +78,7 @@ namespace ChatAppProject.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(AddKeyVM k)
         {
             if (ModelState.IsValid)
