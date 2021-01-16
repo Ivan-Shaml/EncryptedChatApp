@@ -31,12 +31,12 @@ namespace ChatAppProject.Hubs
                 IdentityUser r = await _userManager.FindByIdAsync(recipientId);
                 if (s != null && r != null)
                 {
-                    messageForDB.RecepientUserId = r.Id;
-                    messageForDB.SenderUserId = r.Id;
-                    
                     await this.Clients.User(recipientId).SendAsync(
                                                             "NewMessage", messageForDB);
 
+                    messageForDB.RecepientUserId = r.Id;
+                    messageForDB.SenderUserId = r.Id;
+                    
                     await _dbContext.AddAsync(messageForDB);
                     await _dbContext.SaveChangesAsync();
                 }
