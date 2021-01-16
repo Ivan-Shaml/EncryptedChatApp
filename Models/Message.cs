@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,6 +21,9 @@ namespace ChatAppProject.Models
         [Required]
         public string RecepientUserId { get; set; }
         [Required]
-        public IdentityUser SenderUserId { get; set; }
+        public string SenderUserId { get; set; }
+        
+        [ForeignKey("SenderUserId")]
+        public virtual IdentityUser ParrentSenderUserId { get; set; }
     }
 }

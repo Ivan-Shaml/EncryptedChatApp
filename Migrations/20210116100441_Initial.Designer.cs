@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace ChatAppProject.Data.Migrations
+namespace ChatAppProject.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210110130809_E2EE")]
-    partial class E2EE
+    [Migration("20210116100441_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -35,7 +35,7 @@ namespace ChatAppProject.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SenderUserIdId")
+                    b.Property<string>("SenderUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -49,7 +49,7 @@ namespace ChatAppProject.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SenderUserIdId");
+                    b.HasIndex("SenderUserId");
 
                     b.ToTable("Messages");
                 });
@@ -65,6 +65,7 @@ namespace ChatAppProject.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("PublicKey")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
@@ -280,9 +281,9 @@ namespace ChatAppProject.Data.Migrations
 
             modelBuilder.Entity("ChatAppProject.Models.Message", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "SenderUserId")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "ParrentSenderUserId")
                         .WithMany()
-                        .HasForeignKey("SenderUserIdId")
+                        .HasForeignKey("SenderUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

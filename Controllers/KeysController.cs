@@ -62,7 +62,7 @@ namespace ChatAppProject.Controllers
             IdentityUser User = await _userManager.FindByNameAsync(UserName);
             if (User != null)
             {
-                List<Message> MessagesToDelete = _dbContext.Messages.Where(u => u.RecepientUserId == User.Id || u.SenderUserId.Id == User.Id).ToList();
+                List<Message> MessagesToDelete = _dbContext.Messages.Where(u => u.RecepientUserId == User.Id || u.SenderUserId == User.Id).ToList();
                 _dbContext.RemoveRange(MessagesToDelete);
                 await _dbContext.SaveChangesAsync();
                 return RedirectToAction("Index", "Keys");

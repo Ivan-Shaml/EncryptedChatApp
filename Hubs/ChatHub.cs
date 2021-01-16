@@ -27,11 +27,12 @@ namespace ChatAppProject.Hubs
             if (message.Length < 100000 && message != "")
             {
                 Message messageForDB = new Message { User = this.Context.User.Identity.Name, Text = message, Date = DateTime.Now };
-                messageForDB.SenderUserId = await _userManager.FindByNameAsync(messageForDB.User);
+                IdentityUser s = await _userManager.FindByNameAsync(messageForDB.User);
                 IdentityUser r = await _userManager.FindByIdAsync(recipientId);
-                if (messageForDB.SenderUserId != null && r != null)
+                if (s != null && r != null)
                 {
                     messageForDB.RecepientUserId = r.Id;
+                    messageForDB.SenderUserId = r.Id;
                     
                     await this.Clients.User(recipientId).SendAsync(
                                                             "NewMessage", messageForDB);
