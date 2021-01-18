@@ -1,19 +1,21 @@
 ﻿var connection =
     new signalR.HubConnectionBuilder()
         .withUrl("/chat")
-        .build();
+        .build();//SignalR connection builder
 
-var uname_string = $("#thisUNAME").val();
+var uname_string = $("#thisUNAME").val();//This User's Username
+//UX Sounds
 var notification_sound = new Audio('/sounds/clearly-602.mp3');
 var whisper_sound = new Audio('/sounds/new_whisper.mp3');
 var system_join_sound = new Audio('/sounds/chat_join.mp3');
 var system_leave_sound = new Audio('/sounds/chat_leave.mp3');
-var pubList;
-var triger = true;
-var whisper = false;
-var privateKey;
+//
 
-function escapeHtml(unsafe) {
+var pubList; //Array of public Keys
+var triger = true; //A boolean flag, used in the check if the user specified a valid private key[see connection.on("UserListPubKeys") and check_private_key()]
+var privateKey; //Holds the Private Key
+
+function escapeHtml(unsafe) {//RegEx Check the string and returns a replaced one, with HTML Safe Characters (XSS Prevention)
     return unsafe
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -22,49 +24,51 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-connection.on("NewMessage",
+connection.on("NewMessage",//on Server Sent - new message; if a new message for this user is recieved [WHEN THE SERVER SENDS MESSAGE TO CLIENT]
     function (message) {
-        var sendDate = message.date.slice(message.date.indexOf("T") + 1, message.date.indexOf("."));
-        var chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
-        if (message.user == "SYSTEM") {
+        var sendDate = message.date.slice(message.date.indexOf("T") + 1, message.date.indexOf("."));//get only the short part from DateTime C# format
+        var chatInfo;//Example string of the chat message
+        //var chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`; //Example string of the chat message(not printed, only declared)
+        if (message.user == "SYSTEM") {//if the message comes from system(OnDisconnectedAsync or OnDisconnectedAsync, make the approp UI)
             chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
             $("#messagesList").append(chatInfo);
-            if(message.text.includes("joined")){
+            if(message.text.includes("joined")){ //Check if the message is about User Join or Leave and play approp sound
                 system_join_sound.play();
             }else{
                 system_leave_sound.play();
             }
         }
 
-        if (message.text.startsWith("%")){
-            message.text = message.text.substring(1);
-            var decrypt = new JSEncrypt();
-            decrypt.setPrivateKey(privateKey);
-            message.text = decrypt.decrypt(message.text);
-            if(message.user == uname_string){
+        if (message.text.startsWith("%")){//Check if message is from Whisper Conversation
+            message.text = message.text.substring(1);//Cut the % sign
+            var decrypt = new JSEncrypt();//Create new JSEncryption Object
+            decrypt.setPrivateKey(privateKey);//Set the Private key
+            message.text = decrypt.decrypt(message.text);//decrypt the message text
+            if(message.user == uname_string){//if the message comes from the same logged user, make UI change, else dont and play a new message sound for whisper
             chatInfo = `<div class="whisper"><i>(W)${sendDate}</i> <strong class="text-primary">[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
             }else {
                 chatInfo = `<div class="whisper"><i>(W)${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
                 whisper_sound.play();
             }
-            $("#messagesList").append(chatInfo);
-        }else{
-            var decrypt = new JSEncrypt();
-            decrypt.setPrivateKey(privateKey);
-            message.text = decrypt.decrypt(message.text);
+            $("#messagesList").append(chatInfo);//append the message to the DOM
+        }else//if the message is from the regular group chat(non whisper)
+        {
+            var decrypt = new JSEncrypt();//Create new JSEncryption Object
+            decrypt.setPrivateKey(privateKey);//Set the Private key
+            message.text = decrypt.decrypt(message.text);//decrypt the message text
 
-            if (message.user == uname_string) {
+            if (message.user == uname_string) {//if the message comes from the same logged user, make UI change, else dont and play a new message sound
                 chatInfo = `<div><i>${sendDate}</i> <strong class="text-primary">[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
             } else {
                 chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
                 notification_sound.play();
             }
 
-            $("#messagesList").append(chatInfo);
+            $("#messagesList").append(chatInfo);//append the message to the DOM
         }
     });
 
-connection.on("UserList",
+connection.on("UserList",//on Server Sent - UserList; called OnConnectedAsync or OnDisconnectedAsync, updating the current users in chat list
     function (item) {
         $("#UserList").empty();
         $("#UserList").append(`<strong class='list-group-item list-group-item-info'>Online Users [${item.length}]</strong>`)
@@ -73,79 +77,81 @@ connection.on("UserList",
         }
     });
 
-connection.on("UserListPubKeys",
+connection.on("UserListPubKeys",//on Server Sent - UserListPubKeys; called OnConnectedAsync or OnDisconnectedAsync, updating the current pubList array with all users and public keys
     function (list) {
         pubList = list;
-        if (triger) {
+        if (triger) { //When the pubList is populated, AND the user opens the chat page for the first time, the Private key is needed to continue [see check_private_key() and prompt_private_key()]
             privateKey = prompt_private_key();
             check_private_key();
         }
     });
 
-var input = document.getElementById("messageInput");
-input.addEventListener("keyup", function (event) {
+var input = document.getElementById("messageInput");//the message input box
+input.addEventListener("keyup", function (event) {//press Enter = click sendButton
     if (event.keyCode === 13) {
         event.preventDefault();
         document.getElementById("sendButton").click();
     }
 });
 
-var recipient_pubKey;
-var recipient_userId;
-$("#sendButton").click(function () {
-    var unec_message = $("#messageInput").val();
-    //unec_message = escapeHtml(unec_message); //Enable on send too for better Reflected XXS prevention
-    if (unec_message == '')
+var recipient_pubKey;//Used in whisper Mode
+var recipient_userId;//Used in whisper Mode
+$("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
+    var unec_message = $("#messageInput").val();//the text of the input/message box
+    //unec_message = escapeHtml(unec_message); //Enable on send too, for better Reflected XSS prevention
+    if (unec_message == '')//check if thext is empty
         return false;
-    else if (unec_message.startsWith("@")) {
-        var w_recipient_name = unec_message.substring(1,unec_message.indexOf(' '));
-        unec_message = unec_message.substring(unec_message.indexOf(' ')+1);
-        for (var i = 0; i < pubList.length; i++) {
+    else if (unec_message.startsWith("@")) {//check if the message is for whisper mode
+        var w_recipient_name = unec_message.substring(1,unec_message.indexOf(' '));//get the substring of the recipient user
+        unec_message = unec_message.substring(unec_message.indexOf(' ')+1);//get the message text
+        for (var i = 0; i < pubList.length; i++) {//itterate the array to find the mathcing recipient pubkey and UID
             if (pubList[i].userName == w_recipient_name){
                 recipient_pubKey = pubList[i].publicKey;
                 recipient_userId = pubList[i].userId;
                 break;
-            }}
-            if(recipient_pubKey != null && unec_message.trim().length && recipient_pubKey != thisUserPubKey){
-                var encrypt = new JSEncrypt();
-                encrypt.setPublicKey(recipient_pubKey);
-                var encr_message = encrypt.encrypt(unec_message);
-                encr_message = "%" + encr_message;
-                connection.invoke("Send", encr_message, recipient_userId);
-                encrypt.setPublicKey(thisUserPubKey);
-                var encr_message = encrypt.encrypt(unec_message);
-                encr_message = "%" + encr_message;
-                connection.invoke("Send", encr_message, UserId);
-                window.scrollTo(0, document.body.scrollHeight);
-                $("#messageInput").val('');
-                recipient_userId = null;
-                recipient_pubKey = null;
-                $("#messageInput").removeClass("invalid_recipient");
-            }else{
-                $("#messageInput").addClass("invalid_recipient");
-                recipient_userId = null;
-                recipient_pubKey = null;
             }
         }
-
-    else {
-            for (var i = 0; i < pubList.length; i++) {
-                var encrypt = new JSEncrypt();
-                encrypt.setPublicKey(pubList[i].publicKey);
+            if(recipient_pubKey != null && unec_message.trim().length && recipient_pubKey != thisUserPubKey){ //if the recipient information is valid, encrypt the message
+                //and send it once to the recipient and once to the sender user itself, so it can be encrypted with the pubkey and persisted to DB
+                var encrypt = new JSEncrypt();//Create new JSEncryption Object
+                encrypt.setPublicKey(recipient_pubKey);//encrypt with public key of recipient
                 var encr_message = encrypt.encrypt(unec_message);
-                connection.invoke("Send", encr_message, pubList[i].userId);
+                encr_message = "%" + encr_message;//add % sign to the base64 encrypted text, to make sure it is marked as whisper message traffic
+                connection.invoke("Send", encr_message, recipient_userId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
+                encrypt.setPublicKey(thisUserPubKey);//ecnrypt the message with the public key of sender user
+                var encr_message = encrypt.encrypt(unec_message);
+                encr_message = "%" + encr_message;//add % sign to the base64 encrypted text, to make sure it is marked as whisper message traffic
+                connection.invoke("Send", encr_message, UserId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
+                window.scrollTo(0, document.body.scrollHeight);//scroll chat window to the end of the page
+                $("#messageInput").val('');//clear the message box
+                recipient_userId = null;//make sure that there aren't any values for the next round of messages
+                recipient_pubKey = null;
+                $("#messageInput").removeClass("invalid_recipient");//remove the UI for validation
+            }else{
+                $("#messageInput").addClass("invalid_recipient");//if the recipient user in the whisper conversation that was specified is invalid, trigger the UI validation
+                recipient_userId = null;
+                recipient_pubKey = null;
             }
-            $("#messageInput").removeClass("invalid_recipient");
-            window.scrollTo(0, document.body.scrollHeight);
-            input.value = "";
+    }
+
+    else { // If the message is not marked as Whisper Conversation (message input box value doesn't start with '@')
+            $("#messageInput").removeClass("invalid_recipient");//remove the UI for validation
+            window.scrollTo(0, document.body.scrollHeight);//scroll chat window to the end of the page
+            var encrypt = new JSEncrypt();//Create new JSEncryption Object
+            for (var i = 0; i < pubList.length; i++) {
+                encrypt.setPublicKey(pubList[i].publicKey); //foreach user in the pubList encrypt and send the message with the corresponding Public Key and UID
+                var encr_message = encrypt.encrypt(unec_message);
+                connection.invoke("Send", encr_message, pubList[i].userId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
+            }
+            input.value = ""; //clear the message box
         }
 });
 
-connection.start().catch(function (err) {
+connection.start().catch(function (err) {//SignalR exception logger
     return console.error(err.toString());
 });
 
-function prompt_private_key() {
+function prompt_private_key() {//Js Promt for the User's private key (on page reload)
     var Key = "";
     while (Key == null || Key == "") {
         Key = prompt("Please enter your Private Key to proceed",
@@ -155,16 +161,16 @@ function prompt_private_key() {
 }
 
 
-////
+////[PRIVATE KEY VALIDATION AND DOM MESSAGES DECRYPTION]
 
 var msg;
-var UserId = $("#thisUID").val();
-var thisUserPubKey;
-var test_msg;
+var UserId = $("#thisUID").val();//the current user UID
+var thisUserPubKey;//The current user's Public Key
+var test_msg;//testing of the Private Key provided by User
 var dec_test_msg;
 function check_private_key() {
     for (var i = 0; i < pubList.length; i++) {
-        if (pubList[i].userId == UserId) {
+        if (pubList[i].userId == UserId) {//Find the Current user public key from pubList arr and encrypt a test string stored in test_msg 
             thisUserPubKey = pubList[i].publicKey;
             var encrypt = new JSEncrypt();
             encrypt.setPublicKey(thisUserPubKey);
@@ -174,18 +180,18 @@ function check_private_key() {
     }
 
     while (triger) {
-        var decrypt = new JSEncrypt();
-        decrypt.setPrivateKey(privateKey);
-        dec_test_msg = decrypt.decrypt(test_msg);
-        if (dec_test_msg != "test123") {
-            triger = true;
-            alert("Wrong Private Key!")
-            privateKey = prompt_private_key();
-        } else triger = false;
+        var decrypt = new JSEncrypt();//Create new JSEncryption Object
+        decrypt.setPrivateKey(privateKey);//Set the Private Key with the one from the User Input
+        dec_test_msg = decrypt.decrypt(test_msg);//and decrypt the test message with it
+        if (dec_test_msg != "test123") {//if the decrypted value is different => the private key is wrong
+            triger = true;//loop again
+            alert("Wrong Private Key!")//alert the user
+            privateKey = prompt_private_key();//and re-prompt again
+        } else triger = false;// else - stop the loop, the private key is VALID
     }
 
 
-    $("span[id]").each(function () {
+    $("span[id]").each(function () {//for each Span with id="encryped_message", decrypt and replace the text in the DOM
         if (this.id === 'encryped_message') {
             msg = $(this).html();
             var decrypt = new JSEncrypt();
@@ -197,7 +203,7 @@ function check_private_key() {
 
     });
 
-    $("strong[id]").each(function () {
+    $("strong[id]").each(function () {//for each message, check if the message sender username is same to the user that is logged in and make the user handle blue [UI]
         if (this.id === "m_uid" && this.innerText === `[${uname_string}]`) {
             $(this).addClass("text-primary");
         }
@@ -206,6 +212,6 @@ function check_private_key() {
 };
 ////
 
-$(document).ready(function () {
+$(document).ready(function () {//when the document is fully loaded - scroll to the bottom of the page/chat window
     window.scrollTo(0, document.body.scrollHeight);
 });

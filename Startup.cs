@@ -54,6 +54,17 @@ namespace ChatAppProject
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.Strict;
             });
+            services.AddHsts(options =>
+            {
+                options.Preload = false;
+                options.IncludeSubDomains = true;
+                options.MaxAge = TimeSpan.FromDays(60);
+            });
+            services.AddHttpsRedirection(options =>
+            {
+                options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+                options.HttpsPort = 44335;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,9 +79,10 @@ namespace ChatAppProject
             {
                 app.UseExceptionHandler("/Home/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
             }
-            app.UseHttpsRedirection();
+            
+            app.UseHsts(); //Enables HTTP Strict Transport Security (site be only accessible over HTTPS [Not configured because it is development environment])
+            app.UseHttpsRedirection(); //Redirect To HTTPS
             app.UseStaticFiles();
 
             app.UseRouting();

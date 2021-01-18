@@ -1,4 +1,4 @@
-﻿﻿# Encrypted Chat Web App 
+﻿# Encrypted Chat Web App 
 
 This is an end-to-end encrypted real time chat web application.
 * Based on ASP.NET Core 3.1

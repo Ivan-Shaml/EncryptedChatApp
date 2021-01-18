@@ -11,13 +11,13 @@ namespace ChatAppProject.Models
     public class PubKey
     {
         [Key]
-        public int Id { get; set; }
+        public int Id { get; set; } //Primary Key
         [Required]
-        public string UserId { get; set; }
+        public string UserId { get; set; } //The UID of the user that this key belongs to
         [Required]
-        public string PublicKey { get; set; }
-        public DateTime DateAdded { get; set; }
-        [ForeignKey("UserId")]
+        public string PublicKey { get; set; } //The Public key itself
+        public DateTime DateAdded { get; set; } //Added Date
+        [ForeignKey("UserId")] //EF Core Navigational Property
         public virtual IdentityUser ParentUser { get; set; }
     }
 }
