@@ -1,0 +1,6 @@
+language: csharp
+solution: ChatAppProject.sln
+mono: none
+dotnet: 3.1.11
+script:
+ - dotnet restore
