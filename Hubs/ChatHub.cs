@@ -24,11 +24,11 @@ namespace ChatAppProject.Hubs
         }
 
         //METHODS CALLED FROM THE CLIENT SIDE JavaScript
-        public async Task Send(string message, string recipientId) //@PARAMS: string message: the body of the message(encrypted and base64 encoded from client side); string recipientId: The if of the user it is meant to(and encrypted with his/hers public key)
+        public async Task Send(string message, string signedMessage, string recipientId) //@PARAMS: string message: the body of the message(encrypted and base64 encoded from client side); string recipientId: The if of the user it is meant to(and encrypted with his/hers public key)
         {
             if (message.Length < 100000 && message != "") // check if the message is longer then 100000 chars or empty
             {
-                Message messageForDB = new Message { User = this.Context.User.Identity.Name, Text = message, Date = DateTime.Now }; //new Message object
+                Message messageForDB = new Message { User = this.Context.User.Identity.Name, Text = message, Date = DateTime.Now, signedMessage = signedMessage}; //new Message object
                 IdentityUser s = await _userManager.FindByNameAsync(messageForDB.User); //Query DB for Valid Sender And Recipient
                 IdentityUser r = await _userManager.FindByIdAsync(recipientId);
                 if (s != null && r != null) // Validate the results from Query

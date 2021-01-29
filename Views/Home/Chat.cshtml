@@ -28,22 +28,22 @@
 
                 @if (Model[i].Text.StartsWith('%'))@*the % sign is Base64 Forbidden character, if the message starts with % - that means it is a private/whisper message*@
                 {
-                    <div class="whisper"><i>(W)@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong id="m_uid">[@Model[i].User]</strong>: <span id="encryped_message">@Model[i].Text.TrimStart('%')</span></div>
+                    <div class="whisper"><i>(W)@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong id="m_uid">[@Model[i].User]</strong>: <span id="encryped_message">@Model[i].Text.TrimStart('%')<span id="signed_msg">@Model[i].signedMessage</span><i>@Model[i].User</i></span></div>
                 }
                 else @*If there is not a % sign in the beggining - that means it is just a regular message *@
                 {
-                    <div><i>@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong id="m_uid">[@Model[i].User]</strong>: <span id="encryped_message">@Model[i].Text</span></div>
+                    <div><i>@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong id="m_uid">[@Model[i].User]</strong>: <span id="encryped_message">@Model[i].Text<span id="signed_msg">@Model[i].signedMessage</span><i>@Model[i].User</i></span></div>
                 }
 
                 @*
-                class="whisper" - used in front end to make the user easily differ between message types
-                id="encryped_message" - used in client side js - takes all spans with that id and run the decryptor on the text in them
-                id="m_uid" - used in front end to the user easily differ between if they send the message or not (client side js makes the text blue, if the user send the message)
-                id="messagesList" - client side js appends all new messages inside this div
-                id="messageInput" - client side js takes the value of the message from here
-                id="UserList" - client side js uses this to show the currently connected users
-                id="thisUNAME" - client side js, uses it to differ if the message is appended "messagesList" is by the current user or not, to make the UX and UI better
-                id="thisUID" - client side js, uses it to find the PubKey of our the current logged in user (Used in Whisper Mode)
+            class="whisper" - used in front end to make the user easily differ between message types
+            id="encryped_message" - used in client side js - takes all spans with that id and run the decryptor on the text in them
+            id="m_uid" - used in front end to the user easily differ between if they send the message or not (client side js makes the text blue, if the user send the message)
+            id="messagesList" - client side js appends all new messages inside this div
+            id="messageInput" - client side js takes the value of the message from here
+            id="UserList" - client side js uses this to show the currently connected users
+            id="thisUNAME" - client side js, uses it to differ if the message is appended "messagesList" is by the current user or not, to make the UX and UI better
+            id="thisUID" - client side js, uses it to find the PubKey of our the current logged in user (Used in Whisper Mode)
                 *@
             }
         </div>
@@ -73,5 +73,7 @@ else @*... else - show empty chat*@
 
 @section Scripts {
     <script src="/js/crypto/jsencrypt.min.js"></script>
+    <script src="/js/crypto/crypto-js.min.js"></script>
+    <script src="/js/crypto/sha256.min.js"></script>
     <script src="/js/chat.js"></script>
 }

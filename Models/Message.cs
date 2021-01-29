@@ -17,6 +17,8 @@ namespace ChatAppProject.Models
         [Required]
         public string Text { get; set; } //The Body of the Message
         [Required]
+        public string signedMessage { get; set; } //The RSA signed message
+        [Required]
         public DateTime Date { get; set; } //Date that it's send
         [Required]
         public string RecepientUserId { get; set; } //The Id of the user that it is meant for

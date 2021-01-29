@@ -9,6 +9,7 @@ var notification_sound = new Audio('/sounds/clearly-602.mp3');
 var whisper_sound = new Audio('/sounds/new_whisper.mp3');
 var system_join_sound = new Audio('/sounds/chat_join.mp3');
 var system_leave_sound = new Audio('/sounds/chat_leave.mp3');
+var mitm_alert = new Audio('/sounds/mitm_alert.mp3');
 //
 
 var pubList; //Array of public Keys
@@ -34,37 +35,65 @@ connection.on("NewMessage",//on Server Sent - new message; if a new message for 
             $("#messagesList").append(chatInfo);
             if(message.text.includes("joined")){ //Check if the message is about User Join or Leave and play approp sound
                 system_join_sound.play();
+                return false;
             }else{
                 system_leave_sound.play();
+                return false;
             }
         }
 
         if (message.text.startsWith("%")){//Check if message is from Whisper Conversation
+            var sender_pubKey;
             message.text = message.text.substring(1);//Cut the % sign
             var decrypt = new JSEncrypt();//Create new JSEncryption Object
             decrypt.setPrivateKey(privateKey);//Set the Private key
             message.text = decrypt.decrypt(message.text);//decrypt the message text
-            if(message.user == uname_string){//if the message comes from the same logged user, make UI change, else dont and play a new message sound for whisper
-            chatInfo = `<div class="whisper"><i>(W)${sendDate}</i> <strong class="text-primary">[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+            for (var i = 0; i < pubList.length; i++) {
+                if (pubList[i].userName == message.user) {
+                    sender_pubKey = pubList[i].publicKey;
+                    break;
+                }
+            }
+            decrypt.setPublicKey(sender_pubKey);
+            var ver = decrypt.verify(message.text, message.signedMessage, sha256_digest)
+            if (ver === false) {
+                chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[SECURITY SYSTEM]</strong>: Possible MITM! - Signature missmatch </div>`;
+                $("#messagesList").append(chatInfo);
+                mitm_alert.play();
+            }else if(message.user == uname_string){//if the message comes from the same logged user, make UI change, else dont and play a new message sound for whisper
+                chatInfo = `<div class="whisper"><i>(W)${sendDate}</i> <strong class="text-primary">[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+                $("#messagesList").append(chatInfo);
             }else {
                 chatInfo = `<div class="whisper"><i>(W)${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+                $("#messagesList").append(chatInfo);
                 whisper_sound.play();
             }
-            $("#messagesList").append(chatInfo);//append the message to the DOM
         }else//if the message is from the regular group chat(non whisper)
         {
+            var sender_pubKey;
             var decrypt = new JSEncrypt();//Create new JSEncryption Object
             decrypt.setPrivateKey(privateKey);//Set the Private key
             message.text = decrypt.decrypt(message.text);//decrypt the message text
-
-            if (message.user == uname_string) {//if the message comes from the same logged user, make UI change, else dont and play a new message sound
+            for (var i = 0; i < pubList.length; i++) {
+                if (pubList[i].userName == message.user) {
+                    sender_pubKey = pubList[i].publicKey;
+                    break;
+                }
+            }
+            decrypt.setPublicKey(sender_pubKey);
+            var ver = decrypt.verify(message.text, message.signedMessage, sha256_digest)
+            if (ver === false) {
+                chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[SECURITY SYSTEM]</strong>: Possible MITM! - Signature missmatch </div>`;
+                $("#messagesList").append(chatInfo);
+                mitm_alert.play();
+            }else if (message.user == uname_string) {//if the message comes from the same logged user, make UI change, else dont and play a new message sound
                 chatInfo = `<div><i>${sendDate}</i> <strong class="text-primary">[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+                $("#messagesList").append(chatInfo);
             } else {
                 chatInfo = `<div><i>${sendDate}</i> <strong>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
+                $("#messagesList").append(chatInfo);
                 notification_sound.play();
             }
-
-            $("#messagesList").append(chatInfo);//append the message to the DOM
         }
     });
 
@@ -98,12 +127,14 @@ var recipient_pubKey;//Used in whisper Mode
 var recipient_userId;//Used in whisper Mode
 $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
     var unec_message = $("#messageInput").val();//the text of the input/message box
+    var signedMsg;
     //unec_message = escapeHtml(unec_message); //Enable on send too, for better Reflected XSS prevention
     if (unec_message == '')//check if thext is empty
         return false;
     else if (unec_message.startsWith("@")) {//check if the message is for whisper mode
         var w_recipient_name = unec_message.substring(1,unec_message.indexOf(' '));//get the substring of the recipient user
-        unec_message = unec_message.substring(unec_message.indexOf(' ')+1);//get the message text
+        unec_message = unec_message.substring(unec_message.indexOf(' ') + 1);//get the message text
+        signedMsg = unec_message;
         for (var i = 0; i < pubList.length; i++) {//itterate the array to find the mathcing recipient pubkey and UID
             if (pubList[i].userName == w_recipient_name){
                 recipient_pubKey = pubList[i].publicKey;
@@ -117,11 +148,13 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
                 encrypt.setPublicKey(recipient_pubKey);//encrypt with public key of recipient
                 var encr_message = encrypt.encrypt(unec_message);
                 encr_message = "%" + encr_message;//add % sign to the base64 encrypted text, to make sure it is marked as whisper message traffic
-                connection.invoke("Send", encr_message, recipient_userId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
+                encrypt.setPrivateKey(privateKey);
+                signedMsg = encrypt.sign(signedMsg, sha256_digest, "sha256");
+                connection.invoke("Send", encr_message, signedMsg, recipient_userId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
                 encrypt.setPublicKey(thisUserPubKey);//ecnrypt the message with the public key of sender user
                 var encr_message = encrypt.encrypt(unec_message);
-                encr_message = "%" + encr_message;//add % sign to the base64 encrypted text, to make sure it is marked as whisper message traffic
-                connection.invoke("Send", encr_message, UserId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
+                encr_message = "%" + encr_message;
+                connection.invoke("Send", encr_message, signedMsg, UserId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
                 window.scrollTo(0, document.body.scrollHeight);//scroll chat window to the end of the page
                 $("#messageInput").val('');//clear the message box
                 recipient_userId = null;//make sure that there aren't any values for the next round of messages
@@ -140,8 +173,11 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
             var encrypt = new JSEncrypt();//Create new JSEncryption Object
             for (var i = 0; i < pubList.length; i++) {
                 encrypt.setPublicKey(pubList[i].publicKey); //foreach user in the pubList encrypt and send the message with the corresponding Public Key and UID
+                signedMsg = unec_message;
                 var encr_message = encrypt.encrypt(unec_message);
-                connection.invoke("Send", encr_message, pubList[i].userId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
+                encrypt.setPrivateKey(privateKey);
+                signedMsg = encrypt.sign(signedMsg, sha256_digest, "sha256");
+                connection.invoke("Send", encr_message, signedMsg, pubList[i].userId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
             }
             input.value = ""; //clear the message box
         }
@@ -193,12 +229,39 @@ function check_private_key() {
 
     $("span[id]").each(function () {//for each Span with id="encryped_message", decrypt and replace the text in the DOM
         if (this.id === 'encryped_message') {
-            msg = $(this).html();
+            msg = $(this).text();
+            msg = msg.substr(0, msg.indexOf("==")+2);
+            var sender_pubKey;
+            var signed_msg = $(this).children('span').html();
+            var usr = $(this).children('i').html();
+            console.log(msg);
+            console.log(usr);
+            console.log(signed_msg);
             var decrypt = new JSEncrypt();
             decrypt.setPrivateKey(privateKey);
             msg = decrypt.decrypt(msg);
-            msg = escapeHtml(msg);
-            $(this).html(msg);
+
+            for (var i = 0; i < pubList.length; i++) {
+                if (pubList[i].userName == usr) {
+                    sender_pubKey = pubList[i].publicKey;
+                    break;
+                }
+            }
+            decrypt.setPublicKey(sender_pubKey);
+            var ver = decrypt.verify(msg, signed_msg, sha256_digest)
+            console.log(ver);
+            if (ver === false) {
+                msg = `<strong class='text-danger'>[SECURITY SYSTEM]: Possible MITM! - Signature missmatch </strong>`;
+                mitm_alert.play();
+                //$(this).children('span').empty();
+                //$(this).children('i').empty();
+                $(this).html(msg);
+            } else {
+                msg = escapeHtml(msg);
+                //$(this).children('span').empty();
+                //$(this).children('i').empty();
+                $(this).html(msg);
+            }
         }
 
     });
