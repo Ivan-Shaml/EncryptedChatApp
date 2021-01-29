@@ -47,11 +47,12 @@ By submiting the public key, every participant of the chat will get an update on
 
 **You can't join if you don't have a public/private key pair!**
 
-When you open `Chat`, the client side JS will prompt you to input your PRIVATE KEY. The private key is used to decrypt the database records loaded on page and as well as the Real Time chat communications. 
+When you open `Chat`, the client side JS will prompt you to input your PRIVATE KEY. The private key is used to decrypt the database records loaded on page and as well as the Real Time chat communications. Also it is used to cryptographically sign the messages for authenticity.
 
 **The PRIVATE KEY stays within the context of the JS in the local browser, it is not submitted to the server!**
 After that SignalR sends you the list of the public keys and User IDs of all users, and you start encrypting the messages you send with their public keys one by one.
 
+All messages are encrypted with the user's public key and also cryptographically signed with the private key, for authenticity, thus preventing MITM attacks and tampering.
 After that you have 2 options to send messages:
 
 **Option 1:** The message is send to all users in the chat, it is a group chat none the less.

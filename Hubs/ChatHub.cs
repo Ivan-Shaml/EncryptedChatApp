@@ -24,7 +24,11 @@ namespace ChatAppProject.Hubs
         }
 
         //METHODS CALLED FROM THE CLIENT SIDE JavaScript
-        public async Task Send(string message, string signedMessage, string recipientId) //@PARAMS: string message: the body of the message(encrypted and base64 encoded from client side); string recipientId: The if of the user it is meant to(and encrypted with his/hers public key)
+        //@PARAMS: 
+        //string message: the body of the message(encrypted with public key and base64 encoded from client side);
+        //string signedMessage: SHA-256 hash of the message, encrypted with the user's private key for authenticity(crypthographic signing);
+        //string recipientId: The ID of the user it is meant to(and encrypted with his/hers public key);
+        public async Task Send(string message, string signedMessage, string recipientId)
         {
             if (message.Length < 100000 && message != "") // check if the message is longer then 100000 chars or empty
             {
