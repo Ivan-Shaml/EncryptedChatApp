@@ -17,6 +17,10 @@ namespace ChatAppProject.Hubs
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<IdentityUser> _userManager;
         private static List<string> CurrentUsers = new List<string>(); //List of usernames of the current users connected to the chatroom, used in the frontend
+        
+        const int MESSAGE_PAYLOAD_LEN = 345; //With RSA 2048 bit key, the max base64 string is of length exactly 345(+ "%" sign for whisper traffic)
+        const int SIGNED_MESSAGE_PAYLOAD_LEN = 344; //With RSA 2048 bit key, the max base64 string of the SHA-256 hash is exactly 344 chars long
+        // as for RSA 4096 bit keys the values will be the following -> MESSAGE_PAYLOAD_LEN = 685; and SIGNED_MESSAGE_PAYLOAD_LEN = 684;
         public ChatHub(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager) //Dependency Injection
         {
             _dbContext = dbContext;
@@ -30,7 +34,7 @@ namespace ChatAppProject.Hubs
         //string recipientId: The ID of the user it is meant to(and encrypted with his/hers public key);
         public async Task Send(string message, string signedMessage, string recipientId)
         {
-            if (message.Length < 100000 && message != "") // check if the message is longer then 100000 chars or empty
+            if ( (message.Length <= MESSAGE_PAYLOAD_LEN && message != string.Empty) && (signedMessage.Length <= SIGNED_MESSAGE_PAYLOAD_LEN && signedMessage != string.Empty) ) // check if the message has valid payload
             {
                 Message messageForDB = new Message { User = this.Context.User.Identity.Name, Text = message, Date = DateTime.Now, signedMessage = signedMessage}; //new Message object
                 IdentityUser s = await _userManager.FindByNameAsync(messageForDB.User); //Query DB for Valid Sender And Recipient

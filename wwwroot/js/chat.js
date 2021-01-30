@@ -3,6 +3,8 @@
         .withUrl("/chat")
         .build();//SignalR connection builder
 
+const MESSAGE_LENGTH = 245; // the max RSA encryption length for 2048 bit key Modulus, if the message is longer, the library would fail
+
 var uname_string = $("#thisUNAME").val();//This User's Username
 //UX Sounds
 var notification_sound = new Audio('/sounds/clearly-602.mp3');
@@ -134,6 +136,11 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
     else if (unec_message.startsWith("@")) {//check if the message is for whisper mode
         var w_recipient_name = unec_message.substring(1,unec_message.indexOf(' '));//get the substring of the recipient user
         unec_message = unec_message.substring(unec_message.indexOf(' ') + 1);//get the message text
+        if (unec_message.length > MESSAGE_LENGTH) {//check if the message is longer than RSA MODULUS of 2048-bit key
+            $("#messageInput").addClass("invalid_recipient");
+            alert("Message is too long!");
+            return false;
+        }
         signedMsg = unec_message;//pre-set the signed to the plain text one and later hash and encrypt the plain text
         for (var i = 0; i < pubList.length; i++) {//itterate the array to find the mathcing recipient pubkey and UID
             if (pubList[i].userName == w_recipient_name){
@@ -168,6 +175,11 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
     }
 
     else { // If the message is not marked as Whisper Conversation (message input box value doesn't start with '@')
+            if (unec_message.length > MESSAGE_LENGTH) {//check if the message is longer than RSA MODULUS of 2048-bit key
+                $("#messageInput").addClass("invalid_recipient");
+                alert("Message is too long!");
+                return false;
+            }
             $("#messageInput").removeClass("invalid_recipient");//remove the UI for validation
             window.scrollTo(0, document.body.scrollHeight);//scroll chat window to the end of the page
             var encrypt = new JSEncrypt();//Create new JSEncryption Object
