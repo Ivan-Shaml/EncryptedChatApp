@@ -29,28 +29,52 @@ namespace ChatAppProject.Hubs
 
         //METHODS CALLED FROM THE CLIENT SIDE JavaScript
         //@PARAMS: 
+        //Json Deserialized array of messages that contains the following properties:
         //string message: the body of the message(encrypted with public key and base64 encoded from client side);
         //string signedMessage: SHA-256 hash of the message, encrypted with the user's private key for authenticity(crypthographic signing);
         //string recipientId: The ID of the user it is meant to(and encrypted with his/hers public key);
-        public async Task Send(string message, string signedMessage, string recipientId)
+        public async Task Send(List<MessageReceive> messages)
         {
-            if ( (message.Length <= MESSAGE_PAYLOAD_LEN && message != string.Empty) && (signedMessage.Length <= SIGNED_MESSAGE_PAYLOAD_LEN && signedMessage != string.Empty) ) // check if the message has valid payload
+            List<Message> persistToDB = new List<Message>();
+            foreach (MessageReceive item in messages)
             {
-                Message messageForDB = new Message { User = this.Context.User.Identity.Name, Text = message, Date = DateTime.Now, signedMessage = signedMessage}; //new Message object
-                IdentityUser s = await _userManager.FindByNameAsync(messageForDB.User); //Query DB for Valid Sender And Recipient
-                IdentityUser r = await _userManager.FindByIdAsync(recipientId);
-                if (s != null && r != null) // Validate the results from Query
+                try
                 {
-                    await this.Clients.User(recipientId).SendAsync(
-                                                            "NewMessage", messageForDB); //Send to the Recipient User in the Chat
+                    if ((item.message.Length <= MESSAGE_PAYLOAD_LEN && item.message != string.Empty) && (item.signedMessage.Length <= SIGNED_MESSAGE_PAYLOAD_LEN && item.signedMessage != string.Empty)) // check if the message has valid payload
+                    {
+                        Message messageForDB = new Message { User = this.Context.User.Identity.Name, Text = item.message, Date = DateTime.Now, signedMessage = item.signedMessage }; //new Message object
+                        IdentityUser s = await _userManager.FindByNameAsync(messageForDB.User); //Query DB for Valid Sender And Recipient
+                        IdentityUser r = await _userManager.FindByIdAsync(item.recipientId);
+                        if (s != null && r != null) // Validate the results from Query, if invalid - throw exception
+                        {
+                            await this.Clients.User(item.recipientId).SendAsync(
+                                                                    "NewMessage", messageForDB); //Send to the Recipient User in the Chat
 
-                    messageForDB.RecepientUserId = r.Id; //Assign the RecepientUserId and SenderUserId
-                    messageForDB.SenderUserId = r.Id;
-                    
-                    await _dbContext.AddAsync(messageForDB); //Persist to DB
-                    await _dbContext.SaveChangesAsync();
+                            messageForDB.RecepientUserId = r.Id; //Assign the RecepientUserId and SenderUserId
+                            messageForDB.SenderUserId = r.Id;
+
+                            persistToDB.Add(messageForDB);
+                        }
+                        else
+                        {
+                            throw new Exception("The message recipient or sender are invalid");
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("The message payload is invalid");
+                    }
+                }catch(Exception e) //Handle Exception, inform the end-user with a generic error message, and inform the sysadmin with a console log full error message
+                {
+                    Message errMessage = new Message { User = "SYSTEM", Text = "An error with you last sent message has occured!", Date = DateTime.Now };
+                    await this.Clients.Caller.SendAsync("NewMessage", errMessage);
+                    Console.WriteLine("An exception was triggered on date: {0}\nException Message: {1}",
+                    DateTime.Now.ToString(), e.Message);
                 }
             }
+
+            await _dbContext.Messages.AddRangeAsync(persistToDB);
+            await _dbContext.SaveChangesAsync();
         }
 
         public override async Task OnConnectedAsync() //On User Connect to chat

@@ -128,6 +128,7 @@ input.addEventListener("keyup", function (event) {//press Enter = click sendButt
 var recipient_pubKey;//Used in whisper Mode
 var recipient_userId;//Used in whisper Mode
 $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
+    var messagesToSend = [];//Will hold the encrypted messages, to pe pushed to server
     var unec_message = $("#messageInput").val();//the text of the input/message box
     var signedMsg;//holds the cryptographically signed message
     //unec_message = escapeHtml(unec_message); //Enable on send too, for better Reflected XSS prevention
@@ -155,26 +156,40 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
                 encrypt.setPublicKey(recipient_pubKey);//encrypt with public key of recipient
                 var encr_message = encrypt.encrypt(unec_message);
                 encr_message = "%" + encr_message;//add % sign to the base64 encrypted text, to make sure it is marked as whisper message traffic
-                encrypt.setPrivateKey(privateKey);//set the 'private key and be ready for signing the message
+                encrypt.setPrivateKey(privateKey);//set the private key and be ready for signing the message
                 signedMsg = encrypt.sign(signedMsg, sha256_digest, "sha256");//sign the SHA-256 hash of the plain text message with the private key
-                connection.invoke("Send", encr_message, signedMsg, recipient_userId);//invoke the Send method in the chathub(server side) and pass the message ciphertext,signed message ciphertext and recipient UID
+                var msg = {//a json object containing the data which will be placed pushed in the main massages array
+                    message: encr_message,
+                    signedMessage: signedMsg,
+                    recipientId: recipient_userId
+                };
+                messagesToSend.push(msg);//push the json object containing the data to the array
                 encrypt.setPublicKey(thisUserPubKey);//encrypt the message with the public key of sender user
                 var encr_message = encrypt.encrypt(unec_message);
                 encr_message = "%" + encr_message;
-                connection.invoke("Send", encr_message, signedMsg, UserId);//invoke the Send method in the chathub(server side) and pass the required data
+                var msg = {//a json object containing the data which will be placed pushed in the main massages array
+                    message: encr_message,
+                    signedMessage: signedMsg,
+                    recipientId: UserId
+                };
+                messagesToSend.push(msg);//push the json object containing the data to the array
+                connection.invoke("Send", messagesToSend);//invoke the Send method in the chathub(server side) and pass the required data
                 window.scrollTo(0, document.body.scrollHeight);//scroll chat window to the end of the page
                 $("#messageInput").val('');//clear the message box
                 recipient_userId = null;//make sure that there aren't any values for the next round of messages
                 recipient_pubKey = null;
+                messagesToSend = [];
                 $("#messageInput").removeClass("invalid_recipient");//remove the UI for validation
             }else{
                 $("#messageInput").addClass("invalid_recipient");//if the recipient user in the whisper conversation that was specified is invalid, trigger the UI validation
                 recipient_userId = null;
                 recipient_pubKey = null;
+                messagesToSend = []; //Make sure the messages array is cleared
             }
     }
 
     else { // If the message is not marked as Whisper Conversation (message input box value doesn't start with '@')
+            messagesToSend = []; //Make sure the messages array is cleared
             if (unec_message.length > MESSAGE_LENGTH) {//check if the message is longer than RSA MODULUS of 2048-bit key
                 $("#messageInput").addClass("invalid_recipient");
                 alert("Message is too long!");
@@ -187,11 +202,18 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
                 encrypt.setPublicKey(pubList[i].publicKey); //foreach user in the pubList encrypt and send the message with the corresponding Public Key and UID
                 signedMsg = unec_message;//pre-set the signed to the plain text one and later hash and encrypt the plain text
                 var encr_message = encrypt.encrypt(unec_message);//encrypt the plain text message
-                encrypt.setPrivateKey(privateKey);//set the 'private key and be ready for signing the message
+                encrypt.setPrivateKey(privateKey);//set the private key and be ready for signing the message
                 signedMsg = encrypt.sign(signedMsg, sha256_digest, "sha256");//sign the SHA-256 hash of the plain text message with the private key
-                connection.invoke("Send", encr_message, signedMsg, pubList[i].userId);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
+                var msg = {//a json object containing the data which will be placed pushed in the main massages array
+                    message: encr_message,
+                    signedMessage: signedMsg,
+                    recipientId: pubList[i].userId
+                };
+                messagesToSend.push(msg);//push the json object containing the data to the array
             }
+            connection.invoke("Send", messagesToSend);//invoke the Send method in the chathub(server side) and pass the message text and recipient UID
             input.value = ""; //clear the message box
+            messagesToSend = []; //Make sure the messages array is cleared
         }
 });
 
