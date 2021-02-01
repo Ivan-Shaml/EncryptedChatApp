@@ -79,7 +79,7 @@ namespace ChatAppProject.Hubs
             }
             catch (Exception e) //Handle Exception, inform the end-user with a generic error message, and inform the sysadmin with a console log full error message
             {
-                Message errMessage = new Message { User = "SYSTEM", Text = "An error with you last sent message has occurred! Please, try to refresh the page...", Date = DateTime.Now };
+                Message errMessage = new Message { User = "SYSTEM", Text = "An error with your last message has occurred and it was not sent! Please, try to refresh the page...", Date = DateTime.Now };
                 await this.Clients.Caller.SendAsync("NewMessage", errMessage);
                 IdentityUser errUser = await _userManager.FindByNameAsync(this.Context.User.Identity.Name);
                 string errUserID = "ID is NULL";

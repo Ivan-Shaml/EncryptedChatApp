@@ -18,6 +18,16 @@ var pubList; //Array of public Keys
 var triger = true; //A boolean flag, used in the check if the user specified a valid private key[see connection.on("UserListPubKeys") and check_private_key()]
 var privateKey; //Holds the Private Key
 
+
+connection.onclose(function () {//when the connection is lost-the user is notified and is unable to send/receive messages
+    mitm_alert.play();
+    alert("Server has disconnected! Please, try to refresh the page...");
+    $("#messageInput").addClass("invalid_recipient");
+    $("#messageInput").val("You are Offline! Please, refresh the page...");
+    $("#messageInput").attr("disabled", true);
+    $("#sendButton").attr("disabled", true);
+});
+
 function escapeHtml(unsafe) {//RegEx Check the string and returns a replaced one, with HTML Safe Characters (XSS Prevention)
     return unsafe
         .replace(/&/g, "&amp;")
@@ -35,10 +45,13 @@ connection.on("NewMessage",//on Server Sent - new message; if a new message for 
         if (message.user === "SYSTEM") {//if the message comes from system(OnDisconnectedAsync or OnDisconnectedAsync, make the approp UI)
             chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[${message.user}]</strong>: ${escapeHtml(message.text)} </div>`;
             $("#messagesList").append(chatInfo);
-            if(message.text.includes("joined")){ //Check if the message is about User Join or Leave and play approp sound
+            if (message.text.includes("has joined the chat")) { //Check if the message is about User Join, User Leave or Error Message and play approp sound
                 system_join_sound.play();
                 return false;
-            }else{
+            } else if (message.text.includes("An error with your last message has occurred and it was not sent")){
+                mitm_alert.play();
+                return false;
+            } else {
                 system_leave_sound.play();
                 return false;
             }
