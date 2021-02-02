@@ -28,7 +28,7 @@
 
                 @if (Model[i].Text.StartsWith('%'))@*the % sign is Base64 Forbidden character, if the message starts with % - that means it is a private/whisper message*@
                 {
-                    <div class="whisper"><i>(W)@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong id="m_uid">[@Model[i].User]</strong>: <span id="encryped_message">@Model[i].Text.TrimStart('%')<span id="signed_msg">@Model[i].signedMessage</span><i>@Model[i].User</i></span></div>
+                    <div class="whisper"><i>(W)@Model[i].Date.Hour:@Model[i].Date.Minute:@Model[i].Date.Second</i> <strong id="m_uid">[@Model[i].User]</strong>: <span id="encryped_message">@Model[i].Text<span id="signed_msg">@Model[i].signedMessage</span><i>@Model[i].User</i></span></div>
                 }
                 else @*If there is not a % sign in the beggining - that means it is just a regular message *@
                 {

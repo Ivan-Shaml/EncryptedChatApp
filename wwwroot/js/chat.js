@@ -59,6 +59,7 @@ connection.on("NewMessage",//on Server Sent - new message; if a new message for 
 
         if (message.text.startsWith("%")){//Check if message is from Whisper Conversation
             var sender_pubKey;//holds the public key of the sender user, used for the crypto signing later
+            var b64Value = message.text;//holds the encrypted and base64 encoded message, to be verified and signed for authenticity
             message.text = message.text.substring(1);//Cut the % sign
             var decrypt = new JSEncrypt();//Create new JSEncryption Object
             decrypt.setPrivateKey(privateKey);//Set the Private key
@@ -70,7 +71,7 @@ connection.on("NewMessage",//on Server Sent - new message; if a new message for 
                 }
             }
             decrypt.setPublicKey(sender_pubKey);//set it
-            var ver = decrypt.verify(message.text, message.signedMessage, sha256_digest);//and verify the signature/authenticity of the message
+            var ver = decrypt.verify(b64Value, message.signedMessage, sha256_digest);//and verify the signature/authenticity of the message
             if (ver === false) {//if the message is tampered with - alert the user
                 chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[SECURITY SYSTEM]</strong>: Possible MITM! - Signature mismatch for sender user: ${escapeHtml(message.user)} </div>`;
                 $("#messagesList").append(chatInfo);
@@ -88,6 +89,7 @@ connection.on("NewMessage",//on Server Sent - new message; if a new message for 
             var sender_pubKey;//holds the public key of the sender user, used for the crypto signing later
             var decrypt = new JSEncrypt();//Create new JSEncryption Object
             decrypt.setPrivateKey(privateKey);//Set the Private key
+            var b64Value = message.text;//holds the encrypted and base64 encoded message, to be verified and signed for authenticity
             message.text = decrypt.decrypt(message.text);//decrypt the message text
             for (var i = 0; i < pubList.length; i++) {//iterate the public key collection, to find the key of the sender user
                 if (pubList[i].userName == message.user) {
@@ -96,7 +98,7 @@ connection.on("NewMessage",//on Server Sent - new message; if a new message for 
                 }
             }
             decrypt.setPublicKey(sender_pubKey);//set it
-            var ver = decrypt.verify(message.text, message.signedMessage, sha256_digest);//and verify the signature/authenticity of the message
+            var ver = decrypt.verify(b64Value, message.signedMessage, sha256_digest);//and verify the signature/authenticity of the message
             if (ver === false) {//if the message is tampered with - alert the user
                 chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[SECURITY SYSTEM]</strong>: Possible MITM! - Signature mismatch </div>`;
                 $("#messagesList").append(chatInfo);
@@ -143,7 +145,6 @@ var recipient_userId;//Used in whisper Mode
 $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
     var messagesToSend = [];//Will hold the encrypted messages, to pe pushed to server
     var unec_message = $("#messageInput").val();//the text of the input/message box
-    var signedMsg;//holds the cryptographically signed message
     //unec_message = escapeHtml(unec_message); //Enable on send too, for better Reflected XSS prevention
     if (unec_message == '')//check if the text is empty
         return false;
@@ -155,7 +156,7 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
             alert("Message is too long!");
             return false;
         }
-        signedMsg = unec_message;//pre-set the signed to the plain text one and later hash and encrypt the plain text
+        var signedMsg;//holds the encrypted and base64 encoded message, to be hashed and signed for authenticity
         for (var i = 0; i < pubList.length; i++) {//itterate the array to find the mathcing recipient pubkey and UID
             if (pubList[i].userName == w_recipient_name){
                 recipient_pubKey = pubList[i].publicKey;
@@ -170,7 +171,7 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
                 var encr_message = encrypt.encrypt(unec_message);
                 encr_message = "%" + encr_message;//add % sign to the base64 encrypted text, to make sure it is marked as whisper message traffic
                 encrypt.setPrivateKey(privateKey);//set the private key and be ready for signing the message
-                signedMsg = encrypt.sign(signedMsg, sha256_digest, "sha256");//sign the SHA-256 hash of the plain text message with the private key
+                signedMsg = encrypt.sign(encr_message, sha256_digest, "sha256");//sign the SHA-256 hash of the encrypted and base64 encoded message with the private key
                 var msg = {//a json object containing the data which will be placed pushed in the main massages array
                     message: encr_message,
                     signedMessage: signedMsg,
@@ -180,12 +181,15 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
                 encrypt.setPublicKey(thisUserPubKey);//encrypt the message with the public key of sender user
                 var encr_message = encrypt.encrypt(unec_message);
                 encr_message = "%" + encr_message;
+                encrypt.setPrivateKey(privateKey);//set the private key and be ready for signing the message
+                signedMsg = encrypt.sign(encr_message, sha256_digest, "sha256");//sign the SHA-256 hash of the encrypted and base64 encoded message with the private key
                 var msg = {//a json object containing the data which will be placed pushed in the main massages array
                     message: encr_message,
                     signedMessage: signedMsg,
                     recipientId: UserId
                 };
                 messagesToSend.push(msg);//push the json object containing the data to the array
+                console.log(messagesToSend);
                 connection.invoke("Send", messagesToSend);//invoke the Send method in the chathub(server side) and pass the required data
                 window.scrollTo(0, document.body.scrollHeight);//scroll chat window to the end of the page
                 $("#messageInput").val('');//clear the message box
@@ -213,10 +217,10 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
             var encrypt = new JSEncrypt();//Create new JSEncryption Object
             for (var i = 0; i < pubList.length; i++) {
                 encrypt.setPublicKey(pubList[i].publicKey); //foreach user in the pubList encrypt and send the message with the corresponding Public Key and UID
-                signedMsg = unec_message;//pre-set the signed to the plain text one and later hash and encrypt the plain text
+                var signedMsg;//holds the encrypted and base64 encoded message, to be hashed and signed for authenticity
                 var encr_message = encrypt.encrypt(unec_message);//encrypt the plain text message
                 encrypt.setPrivateKey(privateKey);//set the private key and be ready for signing the message
-                signedMsg = encrypt.sign(signedMsg, sha256_digest, "sha256");//sign the SHA-256 hash of the plain text message with the private key
+                signedMsg = encrypt.sign(encr_message, sha256_digest, "sha256");//sign the SHA-256 hash of the encrypted and base64 encoded message with the private key
                 var msg = {//a json object containing the data which will be placed pushed in the main massages array
                     message: encr_message,
                     signedMessage: signedMsg,
@@ -277,10 +281,14 @@ function check_private_key() {
     $("span[id]").each(function () {//for each Span with id="encryped_message", decrypt, verify the hash and replace the text in the DOM, if hash is invalid - alert the user
         if (this.id === 'encryped_message') {
             msg = $(this).text();
-            msg = msg.substr(0, msg.indexOf("==")+2);
+            msg = msg.substr(0, msg.indexOf("==") + 2);
+            var b64hash = msg;
             var sender_pubKey;
             var signed_msg = $(this).children('span').html();//get the signed hash of the message (yea I know that is very lazy)
             var usr = $(this).children('i').html();//get the username that sent the message
+            if (msg.startsWith("%")) {//check if the message is from whisper traffic, and remove the % sign, because it is base64 forbidden char
+                msg = msg.substring(1);
+            }
             var decrypt = new JSEncrypt();
             decrypt.setPrivateKey(privateKey);
             msg = decrypt.decrypt(msg);
@@ -292,7 +300,7 @@ function check_private_key() {
                 }
             }
             decrypt.setPublicKey(sender_pubKey);
-            var ver = decrypt.verify(msg, signed_msg, sha256_digest);
+            var ver = decrypt.verify(b64hash, signed_msg, sha256_digest);
             if (ver === false) {
                 msg = `<strong class='text-danger'>[Possible MITM! - Signature mismatch] </strong>`;
                 mitm_alert.play();
