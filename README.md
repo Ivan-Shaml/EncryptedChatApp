@@ -10,6 +10,9 @@ This is an end-to-end encrypted real time chat web application.
    * **client side encryption/decryption via [Travis Tidwell
 's JSEncrypt library](https://github.com/travist/jsencrypt). Using RSA Public/Private Key Pair.**
 
+## Presentation slides
+* [Google Slides Presentation](https://docs.google.com/presentation/d/1AbauGXLBdV4uF-oerZFivuX-xrY4E11HB9zsrIR7uZM/edit?fbclid=IwAR3gD2poOFXYQNnY2suU4xeleR58EtXNaAw5N0fQWi8XdDS9SgXjAWOnEsg#slide=id.p)
+
 ## What is End-to-end Encryption ?
 End-to-end encryption (E2EE) is a system of communication where only the communicating users can read the messages. In principle, it prevents potential eavesdroppers – including telecom providers, Internet providers, Law enforcement, and even the provider of the communication service – from being able to access the cryptographic keys needed to decrypt the conversation.
 

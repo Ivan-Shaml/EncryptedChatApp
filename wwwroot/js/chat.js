@@ -189,7 +189,6 @@ $("#sendButton").click(function () {//[WHEN THE CLIENT SENDS MESSAGE TO SERVER]
                     recipientId: UserId
                 };
                 messagesToSend.push(msg);//push the json object containing the data to the array
-                console.log(messagesToSend);
                 connection.invoke("Send", messagesToSend);//invoke the Send method in the chathub(server side) and pass the required data
                 window.scrollTo(0, document.body.scrollHeight);//scroll chat window to the end of the page
                 $("#messageInput").val('');//clear the message box
