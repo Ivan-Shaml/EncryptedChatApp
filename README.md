@@ -13,6 +13,9 @@ This is an end-to-end encrypted real time chat web application.
 ## Presentation Slides
 * [Google Slides Presentation](https://docs.google.com/presentation/d/1AbauGXLBdV4uF-oerZFivuX-xrY4E11HB9zsrIR7uZM/edit?usp=sharing)
 
+## Documentation
+* [GitHub Documentation Wiki Page](https://github.com/p4nd4ta/EncryptedChatApp/wiki)
+
 ## What is End-to-end Encryption ?
 End-to-end encryption (E2EE) is a system of communication where only the communicating users can read the messages. In principle, it prevents potential eavesdroppers – including telecom providers, Internet providers, Law enforcement, and even the provider of the communication service – from being able to access the cryptographic keys needed to decrypt the conversation.
 

@@ -53,6 +53,7 @@ namespace ChatAppProject
             {
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.Strict;
+                options.Secure = CookieSecurePolicy.Always;
             });
             services.AddHsts(options =>
             {
