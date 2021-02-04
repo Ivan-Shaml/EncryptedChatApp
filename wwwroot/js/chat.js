@@ -100,7 +100,7 @@ connection.on("NewMessage",//on Server Sent - new message; if a new message for 
             decrypt.setPublicKey(sender_pubKey);//set it
             var ver = decrypt.verify(b64Value, message.signedMessage, sha256_digest);//and verify the signature/authenticity of the message
             if (ver === false) {//if the message is tampered with - alert the user
-                chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[SECURITY SYSTEM]</strong>: Possible MITM! - Signature mismatch </div>`;
+                chatInfo = `<div><i>${sendDate}</i> <strong class='text-danger'>[SECURITY SYSTEM]</strong>: Possible MITM! - Signature mismatch for sender user: ${escapeHtml(message.user)} </div>`;
                 $("#messagesList").append(chatInfo);
                 mitm_alert.play();
             }else if (message.user == uname_string) {//if the message comes from the same logged user, make UI change, else dont and play a new message sound
