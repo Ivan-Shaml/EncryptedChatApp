@@ -36,6 +36,8 @@ namespace ChatAppProject.Hubs
         public async Task Send(List<MessageReceive> messages)
         {
             List<Message> persistToDB = new List<Message>();
+            List<IdentityUser> allUsers = _userManager.Users.ToList(); //Fetch all Users from Database to a List
+            IdentityUser s = allUsers.Find(i => i.UserName == this.Context.User.Identity.Name); //Query List for Valid Sender User
 
             try
             {
@@ -46,8 +48,7 @@ namespace ChatAppProject.Hubs
                         if ((item.message.Length <= MESSAGE_PAYLOAD_LEN) && (item.signedMessage.Length <= SIGNED_MESSAGE_PAYLOAD_LEN))
                         {
                             Message messageForDB = new Message { User = this.Context.User.Identity.Name, Text = item.message, Date = DateTime.Now, signedMessage = item.signedMessage }; //new Message object
-                            IdentityUser s = await _userManager.FindByNameAsync(messageForDB.User); //Query DB for Valid Sender And Recipient
-                            IdentityUser r = await _userManager.FindByIdAsync(item.recipientId);
+                            IdentityUser r = allUsers.Find(i=>i.Id == item.recipientId); //Query List for Valid Recipient User
                             if (s != null && r != null) // Validate the results from Query, if invalid - throw exception
                             {
                                 await this.Clients.User(item.recipientId).SendAsync(
