@@ -1,5 +1,4 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.alert import Alert
 import os
 import time
@@ -11,7 +10,7 @@ def menu():
     print(" (2) user2@abv.bg")
     print(" (3) user3@abv.bg")
     print("\n (4) Exit script")
-    choice = int(input("Enter option: "))
+    choice = int(input("\nEnter option: "))
     if choice == 4:
         print("Exiting ...")
         exit()
@@ -112,7 +111,6 @@ EiNVvxgks/vdst+MPnSjNsXRufvJ9Nn61VTAU8T6dgEHT9cY9mamLw==
 
 loginUrl = 'https://localhost:44335/Identity/Account/Login'
 chatUrl = 'https://localhost:44335/Home/Chat'
-options = Options()
 driver = webdriver.Chrome(os.getcwd() + "/chromedriver.exe")
 userChoice = menu()
 driver.get(loginUrl)
@@ -120,7 +118,6 @@ driver.get(loginUrl)
 emailInput = driver.find_element_by_xpath("//*[@id='Input_Email']")
 passwordInput = driver.find_element_by_xpath("//*[@id='Input_Password']")
 loginButton = driver.find_element_by_xpath("//*[@id='login-submit']")
-sparta = 0
 
 
 def clear():
@@ -132,14 +129,14 @@ def stress_test(username, password, key, max_count):
     passwordInput.send_keys(password)
     loginButton.click()
     driver.get(chatUrl)
-    time.sleep(3)
+    time.sleep(3.5)
     alert = Alert(driver)
     alert.send_keys(key)
     alert.accept()
     message_input = driver.find_element_by_xpath("//*[@id='messageInput']")
     send_button = driver.find_element_by_xpath("//*[@id='sendButton']")
-    count = 0
-    while count < max_count:
+    count = 1
+    while count <= max_count:
         message_input.send_keys("This is Message number " + str(count))
         send_button.click()
         clear()

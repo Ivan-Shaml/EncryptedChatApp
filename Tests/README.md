@@ -59,9 +59,11 @@ Login as:
  (3) user3@abv.bg
 
  (4) Exit script
+
 Enter option: _
 ```
 
 ### Requirements
 *  Selenium
 *  Chrome Driver in the same directory as the script
+*  The same User credentials and Public Keys associated accordingly with them as from above
